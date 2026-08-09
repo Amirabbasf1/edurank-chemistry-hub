@@ -48,7 +48,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="ms-auto hidden items-center gap-2 lg:flex">
-          <Link to="/courses" search={{ q: "" }} aria-label="جستجو در دوره‌ها">
+          <Link to="/courses" aria-label="جستجو در دوره‌ها">
             <Button variant="ghost" size="icon">
               <Search className="size-4" />
             </Button>
@@ -66,10 +66,10 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link to="/auth" search={{ mode: "login" }}>
+              <Link to="/auth">
                 <Button variant="ghost" size="sm">ورود</Button>
               </Link>
-              <Link to="/auth" search={{ mode: "register" }}>
+              <Link to="/auth">
                 <Button size="sm">ثبت‌نام رایگان</Button>
               </Link>
             </>
@@ -112,10 +112,10 @@ export function SiteHeader() {
                 </>
               ) : (
                 <>
-                  <Link to="/auth" search={{ mode: "login" }} onClick={() => setOpen(false)}>
+                  <Link to="/auth" onClick={() => setOpen(false)}>
                     <Button variant="secondary" className="w-full">ورود</Button>
                   </Link>
-                  <Link to="/auth" search={{ mode: "register" }} onClick={() => setOpen(false)}>
+                  <Link to="/auth" onClick={() => setOpen(false)}>
                     <Button className="w-full">ثبت‌نام رایگان</Button>
                   </Link>
                 </>

@@ -68,7 +68,7 @@ function parseBody(body: string) {
 
 function ArticlePage() {
   const { article, related, course, category } = Route.useLoaderData();
-  const blocks = parseBody(article.body ?? "");
+  const blocks = parseBody(article.content ?? "");
   const toc = blocks.filter((b) => b.kind === "h2");
 
   return (

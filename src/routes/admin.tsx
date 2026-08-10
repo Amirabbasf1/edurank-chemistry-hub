@@ -103,13 +103,7 @@ function AdminLayout() {
         <main className="flex-1 lg:pr-64 p-6 sm:p-10">
           <div className="max-w-7xl mx-auto">
             <div className="bg-white p-8 rounded-2xl border shadow-sm">
-               <h1 className="text-2xl font-black mb-2">{navItems.find(i => i.id === activeTab)?.label}</h1>
-               <p className="text-muted-foreground text-sm">مدیریت و پیکربندی بخش {navItems.find(i => i.id === activeTab)?.label.toLowerCase()} ادیورَنک.</p>
-               <div className="mt-8">
-                 <div className="bg-muted/20 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
-                   این بخش به‌زودی با تمامی قابلیت‌های مدیریت داده و رابط کاربری اختصاصی تکمیل خواهد شد.
-                 </div>
-               </div>
+               <AdminContent tab={activeTab} />
             </div>
           </div>
         </main>

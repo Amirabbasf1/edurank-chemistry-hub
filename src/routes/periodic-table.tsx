@@ -30,7 +30,7 @@ function PeriodicTablePage() {
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <h1 className="text-3xl font-extrabold mb-6">جدول تناوبی هوشمند</h1>
         
-        <div className="grid grid-cols-[1fr_350px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
           <div className="overflow-x-auto pb-4">
             <div 
               className="grid gap-1 min-w-[900px]"

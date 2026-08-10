@@ -316,7 +316,7 @@ function AdminUsers() {
                 <TableCell className="font-bold">{u.full_name}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {u.user_roles.map(r => <Badge key={r.role} variant="secondary">{r.role}</Badge>)}
+                    {(u as any).user_roles?.map((r: any) => <Badge key={r.role} variant="secondary">{r.role}</Badge>)}
                   </div>
                 </TableCell>
                 <TableCell>{faNumber(u.xp)}</TableCell>
@@ -350,7 +350,7 @@ function AdminLogs() {
             {logs?.map(log => (
               <TableRow key={log.id}>
                 <TableCell className="text-xs text-muted-foreground">{faDate(log.created_at)}</TableCell>
-                <TableCell className="font-bold text-xs">{log.profiles?.full_name ?? 'سیستم'}</TableCell>
+                <TableCell className="font-bold text-xs">{(log as any).profiles?.full_name ?? 'سیستم'}</TableCell>
                 <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
                 <TableCell className="text-xs">{log.target_type} ({log.target_id})</TableCell>
               </TableRow>

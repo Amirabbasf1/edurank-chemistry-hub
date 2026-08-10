@@ -651,7 +651,8 @@ function AdminLogs() {
 function AdminExams() {
   const queryClient = useQueryClient();
   const { data: exams } = useQuery({ queryKey: ['admin-exams'], queryFn: adminGetExams });
-  const { data: allQuestions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const { data: qData } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const allQuestions = qData?.questions || [];
   const [editingExam, setEditingExam] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);

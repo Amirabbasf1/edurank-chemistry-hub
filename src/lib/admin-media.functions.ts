@@ -1,31 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
-export const adminUploadMedia = createServerFn({ method: "POST" })
-  .inputValidator((data: { file: File; name: string; bucket: string }) => data)
+// Browser-side logic will use Supabase client directly for large file uploads.
+// These functions are for metadata management and storage interaction rules.
+
+export const adminCreateMediaRecord = createServerFn({ method: "POST" })
+  .inputValidator((data: { filename: string; file_url: string; file_type: string; file_size: number }) => data)
   .handler(async ({ data }) => {
-    // In a real serverless env, file handling is usually through FormData or presigned URLs.
-    // Assuming standard multipart/form-data support in TanStack Start.
-    const { data: uploadData, error } = await supabase.storage
-      .from(data.bucket)
-      .upload(`${Date.now()}-${data.name}`, data.file);
-      
-    if (error) throw error;
-    
-    const { data: publicUrl } = supabase.storage.from(data.bucket).getPublicUrl(uploadData.path);
-    
-    const { data: record, error: recordError } = await supabase
+    const { data: res, error } = await supabase
       .from("media_library")
-      .insert([{
-        filename: data.name,
-        file_url: publicUrl.publicUrl,
-        file_type: data.file.type,
-        size_bytes: data.file.size
-      }])
+      .insert([data])
       .select()
       .single();
-      
-    if (recordError) throw recordError;
-    return record;
+    if (error) throw error;
+    return res;
   });

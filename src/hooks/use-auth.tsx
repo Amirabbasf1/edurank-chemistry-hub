@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Role = "student" | "instructor" | "admin" | "super_admin";
+type Role = "student" | "instructor" | "admin" | "super_admin" | "content_manager" | "exam_manager" | "support_manager" | "financial_manager" | "seo_manager";
 
 type AuthValue = {
   user: User | null;

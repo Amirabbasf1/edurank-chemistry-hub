@@ -115,6 +115,11 @@ export function SiteHeader() {
             <div className="mt-2 grid gap-2">
               {user ? (
                 <>
+                  {isStaff && (
+                    <Link to="/admin" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full border-primary text-primary">پنل مدیریت</Button>
+                    </Link>
+                  )}
                   <Link to="/dashboard" onClick={() => setOpen(false)}>
                     <Button variant="secondary" className="w-full">داشبورد من</Button>
                   </Link>

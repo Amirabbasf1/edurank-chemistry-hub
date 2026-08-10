@@ -426,17 +426,24 @@ function AdminCurriculum() {
 
 function AdminQuestions() {
   const queryClient = useQueryClient();
-  const { data: qData, isLoading } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
-  const questions = qData?.questions || [];
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
 
-  const mutation = useMutation({
-    mutationFn: (data: any) => adminUpsertQuestion({ data }),
+  const { data, isLoading } = useQuery({ 
+    queryKey: ['admin-questions', { q, page }], 
+    queryFn: () => adminGetQuestions({ data: { q, page } }) 
+  });
+  
+  const questions = data?.questions || [];
+  const totalCount = data?.count || 0;
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeleteQuestion({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-questions'] });
-      setIsDialogOpen(false);
-      toast.success('سؤال با موفقیت ذخیره شد');
+      toast.success('سؤال با موفقیت حذف شد');
     }
   });
 
@@ -444,68 +451,10 @@ function AdminQuestions() {
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">بانک سؤالات</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingQuestion(null)} size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px]" dir="rtl">
-            <DialogHeader>
-              <DialogTitle className="text-right font-black">طراحی سؤال جدید</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4 py-4" onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              const body = fd.get('body') as string;
-              const difficulty = fd.get('difficulty') as any;
-              mutation.mutate({ 
-                question: { ...editingQuestion, body, difficulty, type: 'multiple_choice', grade: 'دهم' },
-                options: [
-                  { body: fd.get('opt1'), is_correct: true, sort_order: 1 },
-                  { body: fd.get('opt2'), is_correct: false, sort_order: 2 },
-                  { body: fd.get('opt3'), is_correct: false, sort_order: 3 },
-                  { body: fd.get('opt4'), is_correct: false, sort_order: 4 },
-                ]
-              });
-            }}>
-              <div className="space-y-2">
-                <label className="text-xs font-bold">متن سؤال</label>
-                <Input name="body" defaultValue={editingQuestion?.body} required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold">گزینه صحیح (۱)</label>
-                  <Input name="opt1" required placeholder="پاسخ درست را اینجا بنویسید" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold">گزینه ۲</label>
-                  <Input name="opt2" required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold">گزینه ۳</label>
-                  <Input name="opt3" required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold">گزینه ۴</label>
-                  <Input name="opt4" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold">درجه سختی</label>
-                <Select name="difficulty" defaultValue={editingQuestion?.difficulty || 'medium'}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">آسان</SelectItem>
-                    <SelectItem value="medium">متوسط</SelectItem>
-                    <SelectItem value="hard">سخت</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="w-full font-bold">ذخیره در بانک سؤالات</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+            <Input placeholder="جستجو در سؤالات..." value={q} onChange={(e) => setQ(e.target.value)} className="w-64" />
+            <Button onClick={() => { setEditingQuestion(null); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+        </div>
       </div>
       
       <div className="rounded-xl border overflow-hidden">
@@ -513,26 +462,99 @@ function AdminQuestions() {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="text-right">سؤال</TableHead>
-              <TableHead className="text-right">سطح</TableHead>
+              <TableHead className="text-right">سختی</TableHead>
               <TableHead className="text-right">نوع</TableHead>
+              <TableHead className="text-right">وضعیت</TableHead>
               <TableHead className="text-right">عملیات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-               <TableRow><TableCell colSpan={4} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
-            ) : questions?.map(q => (
+               <TableRow><TableCell colSpan={5} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
+            ) : questions.map(q => (
               <TableRow key={q.id}>
                 <TableCell className="max-w-md truncate text-xs font-bold">{q.body}</TableCell>
                 <TableCell><Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge></TableCell>
                 <TableCell className="text-xs">{q.type}</TableCell>
-                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
+                <TableCell><Badge variant={q.status === 'published' ? 'default' : 'secondary'}>{q.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingQuestion(q); setIsDialogOpen(true); }}><Search className="size-4" /></Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteMutation.mutate(q.id)}><Trash2 className="size-4" /></Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <QuestionBuilderDialog 
+         isOpen={isDialogOpen} 
+         onClose={() => setIsDialogOpen(false)} 
+         question={editingQuestion} 
+      />
     </div>
+  );
+}
+
+function QuestionBuilderDialog({ isOpen, onClose, question }: { isOpen: boolean, onClose: () => void, question: any }) {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertQuestion({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-questions'] });
+      onClose();
+      toast.success('تغییرات ذخیره شد');
+    }
+  });
+
+  const [options, setOptions] = useState<any[]>(question?.question_options || [{ body: '', is_correct: true, sort_order: 1 }, { body: '', is_correct: false, sort_order: 2 }]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogHeader><DialogTitle>طراحی سؤال</DialogTitle></DialogHeader>
+        <form className="space-y-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({ 
+                question: { 
+                    ...question, 
+                    body: fd.get('body'),
+                    difficulty: fd.get('difficulty'),
+                    type: fd.get('type'),
+                    explanation: fd.get('explanation')
+                },
+                options 
+            });
+        }}>
+            <div className="space-y-2"><label className="text-xs font-bold">متن سؤال</label><Textarea name="body" defaultValue={question?.body} required /></div>
+            <div className="grid grid-cols-2 gap-4">
+                <Select name="difficulty" defaultValue={question?.difficulty || 'medium'}><SelectTrigger><SelectValue placeholder="سختی" /></SelectTrigger><SelectContent><SelectItem value="easy">آسان</SelectItem><SelectItem value="medium">متوسط</SelectItem><SelectItem value="hard">سخت</SelectItem></SelectContent></Select>
+                <Select name="type" defaultValue={question?.type || 'multiple_choice'}><SelectTrigger><SelectValue placeholder="نوع سؤال" /></SelectTrigger><SelectContent><SelectItem value="multiple_choice">چهارگزینه‌ای</SelectItem><SelectItem value="true_false">صحیح/غلط</SelectItem><SelectItem value="calculation">محاسباتی</SelectItem><SelectItem value="conceptual">مفهومی</SelectItem></SelectContent></Select>
+            </div>
+            <div className="space-y-2">
+                <label className="text-xs font-bold">گزینه‌ها</label>
+                {options.map((opt, i) => (
+                    <div key={i} className="flex gap-2">
+                        <Input value={opt.body} onChange={e => {
+                            const newOpts = [...options];
+                            newOpts[i].body = e.target.value;
+                            setOptions(newOpts);
+                        }} placeholder={`گزینه ${i+1}`} />
+                        <Checkbox checked={opt.is_correct} onCheckedChange={checked => {
+                            const newOpts = options.map((o, idx) => ({ ...o, is_correct: idx === i ? !!checked : false }));
+                            setOptions(newOpts);
+                        }} />
+                    </div>
+                ))}
+            </div>
+            <div className="space-y-2"><label className="text-xs font-bold">توضیح/پاسخ تشریحی</label><Textarea name="explanation" defaultValue={question?.explanation} /></div>
+            <DialogFooter><Button type="submit">ذخیره</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

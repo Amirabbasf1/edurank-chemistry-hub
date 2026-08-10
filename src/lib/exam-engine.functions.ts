@@ -226,7 +226,7 @@ export const finalizeExamGrading = createServerFn({ method: "POST" })
     const startTime = new Date(attempt?.started_at || new Date());
     const timeSpent = Math.floor((now.getTime() - startTime.getTime()) / 1000);
 
-    const { data: updatedAttempt } = await supabaseAdmin
+    const { data: updatedAttempt, error: updateError } = await supabaseAdmin
       .from("exam_attempts")
       .update({
         score: Math.max(0, score),
@@ -241,6 +241,8 @@ export const finalizeExamGrading = createServerFn({ method: "POST" })
       .eq("id", data.attemptId)
       .select()
       .single();
+
+    if (updateError || !updatedAttempt) throw new Error("Grading failed");
 
     return updatedAttempt;
   });

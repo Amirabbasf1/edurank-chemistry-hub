@@ -253,7 +253,11 @@ export const adminGetExams = createServerFn({ method: "GET" })
 export const adminUpsertExam = createServerFn({ method: "POST" })
   .inputValidator((data: { exam: any; questionIds: string[] }) => data)
   .handler(async ({ data }) => {
-    const { data: ex, error } = await supabase.from("exams").upsert(data.exam).select().single();
+    const { data: ex, error } = await supabase.from("exams").upsert({
+      ...data.exam,
+      question_count: data.questionIds.length,
+      updated_at: new Date().toISOString(),
+    }).select().single();
     if (error) throw error;
     
     await supabase.from("exam_questions").delete().eq("exam_id", ex.id);
@@ -265,6 +269,43 @@ export const adminUpsertExam = createServerFn({ method: "POST" })
     
     return ex;
   });
+
+export const adminDeleteExam = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("exams").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const adminSmartGenerateQuestions = createServerFn({ method: "POST" })
+  .inputValidator((data: { 
+    count: number; 
+    courseId?: string; 
+    chapterId?: string; 
+    topicId?: string; 
+    difficulty?: string;
+    conceptType?: string;
+  }) => data)
+  .handler(async ({ data }) => {
+    let query = supabase.from("questions").select("id");
+    if (data.courseId) query = query.eq("course_id", data.courseId);
+    if (data.chapterId) query = query.eq("chapter_id", data.chapterId);
+    if (data.topicId) query = query.eq("topic_id", data.topicId);
+    if (data.difficulty) query = query.eq("difficulty", data.difficulty as any);
+    if (data.conceptType) query = query.eq("concept_type", data.conceptType as any);
+    
+    const { data: ids, error } = await query.limit(500);
+    if (error) throw error;
+    if (!ids || ids.length < data.count) {
+      throw new Error(`تعداد سوالات کافی یافت نشد (موجود: ${ids?.length || 0})`);
+    }
+
+    // Pick random questions
+    const selected = ids.sort(() => Math.random() - 0.5).slice(0, data.count);
+    return selected.map(q => q.id);
+  });
+
 
 // --- MEDIA LIBRARY ---
 export const adminGetMedia = createServerFn({ method: "GET" })

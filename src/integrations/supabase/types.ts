@@ -523,6 +523,7 @@ export type Database = {
           is_correct: boolean | null
           question_id: string
           selected_option_id: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -532,6 +533,7 @@ export type Database = {
           is_correct?: boolean | null
           question_id: string
           selected_option_id?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -541,6 +543,7 @@ export type Database = {
           is_correct?: boolean | null
           question_id?: string
           selected_option_id?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -571,10 +574,14 @@ export type Database = {
         Row: {
           correct_count: number
           exam_id: string
+          expected_end_at: string | null
+          flagged_questions: string[] | null
           id: string
           max_score: number
+          question_order: string[] | null
           score: number
           started_at: string
+          status: string | null
           submitted_at: string | null
           time_spent_seconds: number
           unanswered_count: number
@@ -584,10 +591,14 @@ export type Database = {
         Insert: {
           correct_count?: number
           exam_id: string
+          expected_end_at?: string | null
+          flagged_questions?: string[] | null
           id?: string
           max_score?: number
+          question_order?: string[] | null
           score?: number
           started_at?: string
+          status?: string | null
           submitted_at?: string | null
           time_spent_seconds?: number
           unanswered_count?: number
@@ -597,10 +608,14 @@ export type Database = {
         Update: {
           correct_count?: number
           exam_id?: string
+          expected_end_at?: string | null
+          flagged_questions?: string[] | null
           id?: string
           max_score?: number
+          question_order?: string[] | null
           score?: number
           started_at?: string
+          status?: string | null
           submitted_at?: string | null
           time_spent_seconds?: number
           unanswered_count?: number
@@ -662,13 +677,24 @@ export type Database = {
           description: string | null
           difficulty: Database["public"]["Enums"]["difficulty"]
           duration_minutes: number
+          ends_at: string | null
           grade: string | null
           id: string
+          instructions: string | null
           is_published: boolean
+          negative_marking: boolean | null
+          passing_score: number | null
           question_count: number
+          randomize_options: boolean | null
+          randomize_questions: boolean | null
           scheduled_at: string | null
           slug: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["course_status"] | null
+          subtopic_id: string | null
           title: string
+          topic_id: string | null
+          type: Database["public"]["Enums"]["exam_type"] | null
         }
         Insert: {
           archived_at?: string | null
@@ -678,13 +704,24 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty"]
           duration_minutes?: number
+          ends_at?: string | null
           grade?: string | null
           id?: string
+          instructions?: string | null
           is_published?: boolean
+          negative_marking?: boolean | null
+          passing_score?: number | null
           question_count?: number
+          randomize_options?: boolean | null
+          randomize_questions?: boolean | null
           scheduled_at?: string | null
           slug: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["course_status"] | null
+          subtopic_id?: string | null
           title: string
+          topic_id?: string | null
+          type?: Database["public"]["Enums"]["exam_type"] | null
         }
         Update: {
           archived_at?: string | null
@@ -694,13 +731,24 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty"]
           duration_minutes?: number
+          ends_at?: string | null
           grade?: string | null
           id?: string
+          instructions?: string | null
           is_published?: boolean
+          negative_marking?: boolean | null
+          passing_score?: number | null
           question_count?: number
+          randomize_options?: boolean | null
+          randomize_questions?: boolean | null
           scheduled_at?: string | null
           slug?: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["course_status"] | null
+          subtopic_id?: string | null
           title?: string
+          topic_id?: string | null
+          type?: Database["public"]["Enums"]["exam_type"] | null
         }
         Relationships: [
           {
@@ -715,6 +763,20 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
             referencedColumns: ["id"]
           },
         ]
@@ -1760,6 +1822,13 @@ export type Database = {
         | "mixed"
       course_status: "draft" | "published" | "archived"
       difficulty: "beginner" | "intermediate" | "advanced"
+      exam_type:
+        | "practice"
+        | "chapter"
+        | "topic"
+        | "grade"
+        | "konkur"
+        | "custom"
       lesson_type: "video" | "text" | "pdf" | "quiz"
       question_type:
         | "multiple_choice"
@@ -1917,6 +1986,7 @@ export const Constants = {
       ],
       course_status: ["draft", "published", "archived"],
       difficulty: ["beginner", "intermediate", "advanced"],
+      exam_type: ["practice", "chapter", "topic", "grade", "konkur", "custom"],
       lesson_type: ["video", "text", "pdf", "quiz"],
       question_type: [
         "multiple_choice",

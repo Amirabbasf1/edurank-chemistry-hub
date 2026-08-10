@@ -131,7 +131,6 @@ function AdminLayout() {
 function AdminContent({ tab }: { tab: string }) {
   switch (tab) {
     case 'dashboard': return <AdminDashboard />;
-    case 'users': return <AdminUsers />;
     case 'courses': return <AdminCourses />;
     case 'curriculum': return <AdminCurriculum />;
     case 'lessons': return <AdminLessons />;
@@ -149,6 +148,7 @@ function AdminContent({ tab }: { tab: string }) {
     default: return <div>بخش در حال توسعه...</div>;
   }
 }
+
 
 function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: adminGetSystemStats });

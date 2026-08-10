@@ -4,8 +4,32 @@ import {
   LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
   Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  adminGetCourses, adminCreateCourse, adminUpdateCourse,
+  adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic,
+  adminGetMedia, adminDeleteMedia,
+  adminGetUsers, adminUpdateUserRole,
+  adminGetQuestions, adminUpsertQuestion,
+  adminGetExams, adminUpsertExam,
+  adminGetArticles, adminUpsertArticle,
+  adminGetAuditLogs,
+  adminGetHomepageSections, adminUpdateHomepageSection
+} from "@/lib/admin.functions";
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { faNumber, faPrice, faDate } from "@/lib/fa";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,

@@ -142,8 +142,8 @@ export const adminGetQuestions = createServerFn({ method: "GET" })
     let query = supabase.from("questions").select("*, question_options(*)").order("created_at", { ascending: false });
     if (data.q) query = query.ilike("body", `%${data.q}%`);
     if (data.grade) query = query.eq("grade", data.grade);
-    if (data.difficulty) query = query.eq("difficulty", data.difficulty);
-    if (data.type) query = query.eq("type", data.type);
+    if (data.difficulty) query = query.eq("difficulty", data.difficulty as any);
+    if (data.type) query = query.eq("type", data.type as any);
     
     const { data: questions, error } = await query;
     if (error) throw error;

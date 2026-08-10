@@ -18,8 +18,13 @@ import {
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
   adminGetHomepageSections, adminUpdateHomepageSection,
-  adminGetLessons, adminUpsertLesson, adminDeleteLesson
+  adminGetLessons, adminUpsertLesson, adminDeleteLesson,
+  adminGetPages, adminUpsertPage, adminDeletePage,
+  adminGetSiteSettings, adminUpdateSiteSetting,
+  adminGetNavigationMenus, adminUpdateNavigationMenu,
+  adminGetSystemStats
 } from "@/lib/admin.functions";
+
 import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { 

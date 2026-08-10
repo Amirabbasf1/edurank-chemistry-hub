@@ -137,8 +137,12 @@ function AdminContent({ tab }: { tab: string }) {
     case 'lessons': return <AdminLessons />;
     case 'questions': return <AdminQuestions />;
     case 'exams': return <AdminExams />;
+    case 'users': return <AdminUsers />;
+    case 'articles': return <AdminArticles />;
+    case 'pages': return <AdminPages />;
     case 'media': return <AdminMedia />;
     case 'homepage': return <AdminHomepage />;
+    case 'menus': return <AdminMenus />;
     case 'seo': return <AdminSEO />;
     case 'logs': return <AdminLogs />;
     case 'settings': return <AdminSettings />;
@@ -147,24 +151,31 @@ function AdminContent({ tab }: { tab: string }) {
 }
 
 function AdminDashboard() {
+  const { data: stats, isLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: adminGetSystemStats });
+
   return (
     <div className="space-y-8 text-right" dir="rtl">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: 'کل دوره‌ها', value: '۱۲', color: 'bg-blue-500' },
-          { label: 'دانشجویان فعال', value: '۱,۴۵۰', color: 'bg-green-500' },
-          { label: 'فروش ماهانه', value: '۴۵.۲M', color: 'bg-purple-500' },
-          { label: 'آزمون‌های امروز', value: '۱۲۸', color: 'bg-orange-500' },
+          { label: 'دانشجویان', value: stats?.totalStudents || 0, color: 'bg-blue-500', icon: Users },
+          { label: 'دوره‌ها', value: stats?.totalCourses || 0, color: 'bg-green-500', icon: BookOpen },
+          { label: 'دروس', value: stats?.totalLessons || 0, color: 'bg-indigo-500', icon: GraduationCap },
+          { label: 'سوالات', value: stats?.totalQuestions || 0, color: 'bg-purple-500', icon: ClipboardList },
+          { label: 'آزمون‌ها', value: stats?.totalExams || 0, color: 'bg-orange-500', icon: Package },
+          { label: 'شرکت در آزمون', value: stats?.totalAttempts || 0, color: 'bg-red-500', icon: Timer },
         ].map((stat, idx) => (
-          <div key={idx} className="p-6 rounded-2xl bg-white border shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{stat.label}</p>
-              <h3 className="text-2xl font-black mt-1">{stat.value}</h3>
+          <div key={idx} className="p-4 rounded-2xl bg-white border shadow-sm flex flex-col items-center text-center justify-center gap-2">
+            <div className={`size-10 rounded-xl ${stat.color} bg-opacity-10 flex items-center justify-center`}>
+              <stat.icon className={`size-5 text-${stat.color.split('-')[1]}-600`} />
             </div>
-            <div className={`size-10 rounded-xl ${stat.color} opacity-20`} />
+            <div>
+              <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">{stat.label}</p>
+              <h3 className="text-xl font-black mt-1">{isLoading ? '...' : faNumber(stat.value)}</h3>
+            </div>
           </div>
         ))}
       </div>
+
       <div className="bg-muted/10 p-12 rounded-2xl border-2 border-dashed border-muted text-center">
         <Monitor className="size-12 text-muted mx-auto mb-4" />
         <h3 className="text-lg font-bold">نمای کلی سیستم</h3>

@@ -1287,16 +1287,24 @@ export type Database = {
           archived_at: string | null
           body: string
           chapter_id: string | null
+          chemistry_formula: string | null
+          concept_type:
+            | Database["public"]["Enums"]["concept_classification"]
+            | null
           correct_text: string | null
           course_id: string | null
           created_at: string
           difficulty: Database["public"]["Enums"]["difficulty"]
+          educational_tips: string | null
+          estimated_solving_time: number | null
           estimated_time_seconds: number | null
+          exam_session: string | null
           explanation: string | null
           explanation_tips: string | null
           grade: string | null
           id: string
           image_url: string | null
+          konkur_year: number | null
           lesson_id: string | null
           points: number
           question_type: Database["public"]["Enums"]["lesson_type"] | null
@@ -1308,22 +1316,31 @@ export type Database = {
           tags: string[]
           topic_id: string | null
           type: Database["public"]["Enums"]["question_type"]
+          usage_count: number | null
         }
         Insert: {
           alternative_solutions?: string | null
           archived_at?: string | null
           body: string
           chapter_id?: string | null
+          chemistry_formula?: string | null
+          concept_type?:
+            | Database["public"]["Enums"]["concept_classification"]
+            | null
           correct_text?: string | null
           course_id?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
+          educational_tips?: string | null
+          estimated_solving_time?: number | null
           estimated_time_seconds?: number | null
+          exam_session?: string | null
           explanation?: string | null
           explanation_tips?: string | null
           grade?: string | null
           id?: string
           image_url?: string | null
+          konkur_year?: number | null
           lesson_id?: string | null
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
@@ -1335,22 +1352,31 @@ export type Database = {
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
+          usage_count?: number | null
         }
         Update: {
           alternative_solutions?: string | null
           archived_at?: string | null
           body?: string
           chapter_id?: string | null
+          chemistry_formula?: string | null
+          concept_type?:
+            | Database["public"]["Enums"]["concept_classification"]
+            | null
           correct_text?: string | null
           course_id?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
+          educational_tips?: string | null
+          estimated_solving_time?: number | null
           estimated_time_seconds?: number | null
+          exam_session?: string | null
           explanation?: string | null
           explanation_tips?: string | null
           grade?: string | null
           id?: string
           image_url?: string | null
+          konkur_year?: number | null
           lesson_id?: string | null
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
@@ -1362,6 +1388,7 @@ export type Database = {
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
+          usage_count?: number | null
         }
         Relationships: [
           {
@@ -1726,6 +1753,11 @@ export type Database = {
         | "financial_manager"
         | "seo_manager"
       chemistry_grade: "grade_10" | "grade_11" | "grade_12" | "konkur"
+      concept_classification:
+        | "conceptual"
+        | "calculation"
+        | "memorization"
+        | "mixed"
       course_status: "draft" | "published" | "archived"
       difficulty: "beginner" | "intermediate" | "advanced"
       lesson_type: "video" | "text" | "pdf" | "quiz"
@@ -1734,6 +1766,9 @@ export type Database = {
         | "true_false"
         | "short_answer"
         | "numeric"
+        | "calculation"
+        | "conceptual"
+        | "mixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1874,6 +1909,12 @@ export const Constants = {
         "seo_manager",
       ],
       chemistry_grade: ["grade_10", "grade_11", "grade_12", "konkur"],
+      concept_classification: [
+        "conceptual",
+        "calculation",
+        "memorization",
+        "mixed",
+      ],
       course_status: ["draft", "published", "archived"],
       difficulty: ["beginner", "intermediate", "advanced"],
       lesson_type: ["video", "text", "pdf", "quiz"],
@@ -1882,6 +1923,9 @@ export const Constants = {
         "true_false",
         "short_answer",
         "numeric",
+        "calculation",
+        "conceptual",
+        "mixed",
       ],
     },
   },

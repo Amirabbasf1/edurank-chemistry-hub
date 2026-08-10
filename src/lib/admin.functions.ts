@@ -153,35 +153,93 @@ export const adminDeleteLesson = createServerFn({ method: "POST" })
 
 // --- QUESTIONS ---
 export const adminGetQuestions = createServerFn({ method: "GET" })
-  .inputValidator((data: { q?: string; grade?: string; difficulty?: string; type?: string; chapterId?: string; topicId?: string; subtopicId?: string }) => data)
+  .inputValidator((data: { 
+    q?: string; 
+    grade?: string; 
+    difficulty?: string; 
+    type?: string; 
+    chapterId?: string; 
+    topicId?: string; 
+    subtopicId?: string;
+    courseId?: string;
+    conceptType?: string;
+    status?: string;
+    source?: string;
+    page?: number;
+    pageSize?: number;
+  }) => data)
   .handler(async ({ data }) => {
-    let query = supabase.from("questions").select("*, question_options(*)").order("created_at", { ascending: false });
+    const pageSize = data.pageSize || 20;
+    const page = data.page || 0;
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+      .from("questions")
+      .select("*, question_options(*)", { count: "exact" })
+      .order("created_at", { ascending: false });
+
     if (data.q) query = query.ilike("body", `%${data.q}%`);
     if (data.grade) query = query.eq("grade", data.grade);
     if (data.difficulty) query = query.eq("difficulty", data.difficulty as any);
     if (data.type) query = query.eq("type", data.type as any);
     if (data.chapterId) query = query.eq("chapter_id", data.chapterId);
     if (data.topicId) query = query.eq("topic_id", data.topicId);
-    
-    const { data: questions, error } = await query;
+    if (data.subtopicId) query = query.eq("subtopic_id", data.subtopicId);
+    if (data.courseId) query = query.eq("course_id", data.courseId);
+    if (data.conceptType) query = query.eq("concept_type", data.conceptType as any);
+    if (data.status) query = query.eq("status", data.status as any);
+    if (data.source) query = query.ilike("source", `%${data.source}%`);
+
+    const { data: questions, error, count } = await query.range(from, to);
     if (error) throw error;
-    return questions;
+    return { questions, count };
   });
 
 export const adminUpsertQuestion = createServerFn({ method: "POST" })
   .inputValidator((data: { question: any; options: any[] }) => data)
   .handler(async ({ data }) => {
+    // Validation
+    if (!data.question.body) throw new Error("متن سوال الزامی است.");
+    if (data.question.type === 'multiple_choice' && data.options.length < 2) {
+      throw new Error("برای سوالات چهارگزینه‌ای حداقل ۲ گزینه نیاز است.");
+    }
+    
     const { data: q, error } = await supabase.from("questions").upsert(data.question).select().single();
     if (error) throw error;
     
-    if (data.options.length > 0) {
+    if (data.options && data.options.length > 0) {
+      // Ensure all options have the correct question_id
+      const optionsToInsert = data.options.map(o => {
+        const { id, ...rest } = o; // Strip ID if it's new
+        return { ...rest, question_id: q.id };
+      });
+      
       await supabase.from("question_options").delete().eq("question_id", q.id);
-      await supabase.from("question_options").insert(
-        data.options.map(o => ({ ...o, question_id: q.id }))
-      );
+      const { error: optionsError } = await supabase.from("question_options").insert(optionsToInsert);
+      if (optionsError) throw optionsError;
     }
     
     return q;
+  });
+
+export const adminDeleteQuestion = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("questions").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const adminBulkUpdateQuestionStatus = createServerFn({ method: "POST" })
+  .inputValidator((data: { ids: string[]; status: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase
+      .from("questions")
+      .update({ status: data.status as any })
+      .in("id", data.ids);
+    if (error) throw error;
+    return { success: true };
   });
 
 // --- EXAMS ---

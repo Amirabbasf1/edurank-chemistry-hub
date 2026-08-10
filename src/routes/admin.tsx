@@ -1346,7 +1346,7 @@ function AdminMedia() {
                   .getPublicUrl(filePath);
                   
                 await adminCreateMediaRecord({
-                  file_name: file.name,
+                  filename: file.name,
                   file_url: publicUrl,
                   file_type: file.type,
                   file_size: file.size
@@ -1370,11 +1370,11 @@ function AdminMedia() {
           media?.map(m => (
             <div key={m.id} className="group relative aspect-square rounded-xl border overflow-hidden bg-muted/20">
               {m.file_type.startsWith('image/') ? (
-                <img src={m.file_url} alt={m.file_name} className="w-full h-full object-cover" />
+                <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center p-4">
                   <ImageIcon className="size-8 text-muted-foreground mb-2" />
-                  <span className="text-[10px] font-bold text-center line-clamp-2">{m.file_name}</span>
+                  <span className="text-[10px] font-bold text-center line-clamp-2">{m.filename}</span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -1388,6 +1388,39 @@ function AdminMedia() {
     </div>
   );
 }
+
+function AdminSettings() {
+  return (
+    <div className="space-y-8 text-right" dir="rtl">
+      <h2 className="text-xl font-black">تنظیمات پلتفرم</h2>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+          <TabsTrigger value="general">عمومی</TabsTrigger>
+          <TabsTrigger value="branding">برندینگ</TabsTrigger>
+          <TabsTrigger value="learning">آموزش</TabsTrigger>
+          <TabsTrigger value="security">امنیت</TabsTrigger>
+        </TabsList>
+        <TabsContent value="general" className="mt-6 space-y-4">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm max-w-md">
+            <h3 className="font-bold mb-4">تنظیمات عمومی</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
+                <Input defaultValue="ادیورَنک" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
+                <Input defaultValue="support@edurank.ir" />
+              </div>
+              <Button size="sm" className="w-full">ذخیره تنظیمات</Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 
 
 

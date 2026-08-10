@@ -486,3 +486,93 @@ function AdminSettings() {
     </div>
   );
 }
+
+  const { data: articles } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت مقالات</h2>
+        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+      </div>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">عنوان</TableHead>
+              <TableHead className="text-right">نویسنده</TableHead>
+              <TableHead className="text-right">وضعیت</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {articles?.map(a => (
+              <TableRow key={a.id}>
+                <TableCell className="font-bold">{a.title}</TableCell>
+                <TableCell>{a.author_name}</TableCell>
+                <TableCell><Badge>{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminHomepage() {
+  const { data: sections } = useQuery({ queryKey: ['admin-homepage'], queryFn: adminGetHomepageSections });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت صفحه اصلی</h2>
+      <div className="grid gap-4">
+        {sections?.map(s => (
+          <div key={s.id} className="p-6 rounded-2xl border flex items-center justify-between hover:bg-muted/5 transition-colors">
+            <div>
+              <h3 className="font-bold">{s.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{s.section_slug}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={s.is_active ? 'default' : 'secondary'}>{s.is_active ? 'فعال' : 'غیرفعال'}</Badge>
+              <Button variant="outline" size="sm">ویرایش محتوا</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminSEO() {
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت سئو (SEO)</h2>
+      <div className="bg-muted/10 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
+        ابزارهای مدیریت متادیتا، سایت‌مپ و بهینه‌سازی موتورهای جستجو در این بخش قرار می‌گیرند.
+      </div>
+    </div>
+  );
+}
+
+function AdminSettings() {
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">تنظیمات سیستم</h2>
+      <div className="grid gap-6">
+        <div className="p-6 rounded-2xl border space-y-4">
+           <h3 className="font-bold border-b pb-2">تنظیمات عمومی</h3>
+           <div className="grid gap-4 max-w-md">
+              <div className="space-y-2">
+                 <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
+                 <Input defaultValue="ادیورَنک" />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
+                 <Input defaultValue="support@edurank.ir" />
+              </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}

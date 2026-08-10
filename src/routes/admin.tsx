@@ -14,14 +14,15 @@ export const Route = createFileRoute("/admin")({
 const navItems = [
   { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
   { id: 'users', label: 'کاربران', icon: Users },
-  { id: 'courses', label: 'مدیریت دوره‌ها', icon: BookOpen },
-  { id: 'curriculum', label: 'مدیریت سرفصل‌ها', icon: GraduationCap },
+  { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
+  { id: 'curriculum', label: 'سرفصل‌ها', icon: GraduationCap },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
-  { id: 'exams', label: 'مدیریت آزمون‌ها', icon: Package },
+  { id: 'exams', label: 'آزمون‌ها', icon: Package },
   { id: 'articles', label: 'مقالات', icon: FileText },
-  { id: 'media', label: 'رسانه', icon: ImageIcon },
-  { id: 'homepage', label: 'مدیریت صفحه اصلی', icon: Monitor },
-  { id: 'logs', label: 'گزارشات امنیت', icon: ShieldAlert },
+  { id: 'media', label: 'کتابخانه رسانه', icon: ImageIcon },
+  { id: 'homepage', label: 'صفحه اصلی', icon: Monitor },
+  { id: 'seo', label: 'سئو', icon: Search },
+  { id: 'logs', label: 'گزارشات', icon: ShieldAlert },
   { id: 'settings', label: 'تنظیمات', icon: Settings },
 ];
 

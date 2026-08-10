@@ -1088,12 +1088,239 @@ function AdminLessons() {
   );
 }
 
-function AdminSEO() {
+function AdminPages() {
+  const queryClient = useQueryClient();
+  const { data: pages, isLoading } = useQuery({ queryKey: ['admin-pages'], queryFn: adminGetPages });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertPage({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
+      setIsDialogOpen(false);
+      toast.success('برگه با موفقیت ذخیره شد');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeletePage({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
+      toast.success('برگه حذف شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">مدیریت سئو (SEO)</h2>
-      <div className="bg-muted/10 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
-        ابزارهای مدیریت متادیتا، سایت‌مپ و بهینه‌سازی موتورهای جستجو در این بخش قرار می‌گیرند.
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت برگه‌ها</h2>
+        <Button onClick={() => { setEditingPage(null); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+          <Plus className="size-4" /> برگه جدید
+        </Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]" dir="rtl">
+          <DialogHeader><DialogTitle className="text-right font-black">ویرایش برگه</DialogTitle></DialogHeader>
+          <form className="space-y-4 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingPage,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              content: fd.get('content'),
+              status: fd.get('status')
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">عنوان برگه</label>
+                <Input name="title" defaultValue={editingPage?.title} required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">نامک (Slug)</label>
+                <Input name="slug" defaultValue={editingPage?.slug} required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">محتوا</label>
+              <Textarea name="content" className="min-h-[300px]" defaultValue={editingPage?.content} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">وضعیت</label>
+              <Select name="status" defaultValue={editingPage?.status || 'draft'}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">پیش‌نویس</SelectItem>
+                  <SelectItem value="published">منتشر شده</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full">ذخیره</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">نامک</TableHead><TableHead className="text-right">وضعیت</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
+              pages?.map(p => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-bold">{p.title}</TableCell>
+                  <TableCell>{p.slug}</TableCell>
+                  <TableCell><Badge>{p.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingPage(p); setIsDialogOpen(true); }}>ویرایش</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { if(confirm('حذف شود؟')) deleteMutation.mutate(p.id) }}>حذف</Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            }
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminMenus() {
+  const queryClient = useQueryClient();
+  const { data: menus, isLoading } = useQuery({ queryKey: ['admin-menus'], queryFn: adminGetNavigationMenus });
+  const [selectedMenu, setSelectedMenu] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpdateNavigationMenu({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-menus'] });
+      toast.success('فهرست با موفقیت ذخیره شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت فهرست‌ها</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <h3 className="font-bold">فهرست‌های موجود</h3>
+          {menus?.map(m => (
+            <div key={m.id} className="p-4 rounded-xl border flex items-center justify-between cursor-pointer hover:border-primary" onClick={() => setSelectedMenu(m)}>
+              <span>{m.name} ({m.location})</span>
+              <ArrowRight className="size-4" />
+            </div>
+          ))}
+          <Button variant="outline" className="w-full" onClick={() => setSelectedMenu({ name: 'فهرست جدید', location: 'header', items: [] })}>ایجاد فهرست جدید</Button>
+        </div>
+
+        {selectedMenu && (
+          <div className="space-y-4 border p-6 rounded-2xl bg-white shadow-sm">
+            <h3 className="font-bold">ویرایش {selectedMenu.name}</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">نام فهرست</label>
+              <Input value={selectedMenu.name} onChange={e => setSelectedMenu({...selectedMenu, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">مکان نمایش</label>
+              <Select value={selectedMenu.location} onValueChange={v => setSelectedMenu({...selectedMenu, location: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="header">هدر (بالا)</SelectItem>
+                  <SelectItem value="footer">فوتر (پایین)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold">آیتم‌های فهرست</label>
+                <Button variant="ghost" className="h-7 text-[10px]" onClick={() => setSelectedMenu({...selectedMenu, items: [...selectedMenu.items, { label: 'آیتم جدید', url: '/' }]})}><Plus className="size-3" /> افزودن</Button>
+              </div>
+              <ScrollArea className="h-64 border rounded-lg p-2">
+                {selectedMenu.items.map((item: any, idx: number) => (
+                  <div key={idx} className="p-2 border rounded mb-2 space-y-2 bg-muted/30">
+                    <div className="flex gap-2">
+                      <Input placeholder="عنوان" value={item.label} onChange={e => {
+                        const newItems = [...selectedMenu.items];
+                        newItems[idx].label = e.target.value;
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }} />
+                      <Input placeholder="لینک" value={item.url} onChange={e => {
+                        const newItems = [...selectedMenu.items];
+                        newItems[idx].url = e.target.value;
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }} />
+                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => {
+                        const newItems = selectedMenu.items.filter((_: any, i: number) => i !== idx);
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }}><Trash2 className="size-4" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <Button className="w-full" onClick={() => mutation.mutate(selectedMenu)}>ذخیره تغییرات فهرست</Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AdminSEO() {
+  const { data: settings } = useQuery({ queryKey: ['admin-settings'], queryFn: adminGetSiteSettings });
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpdateSiteSetting({ data }),
+    onSuccess: () => {
+      toast.success('تنظیمات سئو ذخیره شد');
+    }
+  });
+
+  const getVal = (key: string) => settings?.find(s => s.key === key)?.value || "";
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت سئو سراسری</h2>
+      <div className="grid gap-6 max-w-2xl">
+        <div className="space-y-2">
+          <label className="text-xs font-bold">عنوان سایت</label>
+          <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold">توضیحات سایت (Meta Description)</label>
+          <Textarea defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold">کلمات کلیدی (جدا شده با کاما)</label>
+          <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminLogs() {
+  const { data: logs, isLoading } = useQuery({ queryKey: ['admin-logs'], queryFn: adminGetAuditLogs });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">گزارشات سیستم (Audit Logs)</h2>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader><TableRow><TableHead className="text-right">کاربر</TableHead><TableHead className="text-right">عملیات</TableHead><TableHead className="text-right">نوع</TableHead><TableHead className="text-right">زمان</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
+              logs?.map(log => (
+                <TableRow key={log.id}>
+                  <TableCell className="font-bold">{(log.profiles as any)?.full_name || log.user_id}</TableCell>
+                  <TableCell>{log.action}</TableCell>
+                  <TableCell><Badge variant="outline">{log.target_type}</Badge></TableCell>
+                  <TableCell className="text-xs">{faDate(log.created_at)}</TableCell>
+                </TableRow>
+              ))
+            }
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
@@ -1101,25 +1328,78 @@ function AdminSEO() {
 
 function AdminSettings() {
   return (
+    <div className="space-y-8 text-right" dir="rtl">
+      <h2 className="text-xl font-black">تنظیمات پلتفرم</h2>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+          <TabsTrigger value="general">عمومی</TabsTrigger>
+          <TabsTrigger value="branding">برندینگ</TabsTrigger>
+          <TabsTrigger value="learning">آموزش</TabsTrigger>
+          <TabsTrigger value="security">امنیت</TabsTrigger>
+        </TabsList>
+        <TabsContent value="general" className="mt-6 space-y-4">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm max-w-md">
+            <h3 className="font-bold mb-4">تنظیمات عمومی</h3>
+            <p className="text-sm text-muted-foreground">پیکربندی اصلی سایت در این بخش انجام می‌شود.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function AdminUsers() {
+  const queryClient = useQueryClient();
+  const { data: users, isLoading } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });
+  const mutation = useMutation({
+    mutationFn: (data: { userId: string; roles: string[] }) => adminUpdateUserRole({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('نقش کاربر با موفقیت بروزرسانی شد');
+    }
+  });
+
+  return (
     <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">تنظیمات سیستم</h2>
-      <div className="grid gap-6">
-        <div className="p-6 rounded-2xl border space-y-4">
-           <h3 className="font-bold border-b pb-2">تنظیمات عمومی</h3>
-           <div className="grid gap-4 max-w-md">
-              <div className="space-y-2">
-                 <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
-                 <Input defaultValue="ادیورَنک" />
-              </div>
-              <div className="space-y-2">
-                 <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
-                 <Input defaultValue="support@edurank.ir" />
-              </div>
-           </div>
-        </div>
+      <h2 className="text-xl font-black">مدیریت کاربران</h2>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader><TableRow><TableHead className="text-right">نام کاربر</TableHead><TableHead className="text-right">ایمیل</TableHead><TableHead className="text-right">نقش‌ها</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
+              users?.map(user => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-bold">{user.full_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
+                      {(user.user_roles as any[])?.map((r, i) => <Badge key={i} variant="outline">{r.role}</Badge>)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Select onValueChange={(role) => mutation.mutate({ userId: user.id, roles: [role] })}>
+                      <SelectTrigger className="w-32"><SelectValue placeholder="تغییر نقش" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">مدیر</SelectItem>
+                        <SelectItem value="content_manager">مدیر محتوا</SelectItem>
+                        <SelectItem value="exam_manager">مدیر آزمون</SelectItem>
+                        <SelectItem value="student">دانشجو</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+              ))
+            }
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
 }
+
+function AdminQuestions() { return <div>بخش سوالات (در حال بروزرسانی)</div>; }
+function AdminExams() { return <div>بخش آزمون‌ها (در حال بروزرسانی)</div>; }
+function AdminMedia() { return <div>کتابخانه رسانه (در حال بروزرسانی)</div>; }
+
 
 

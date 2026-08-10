@@ -121,9 +121,9 @@ function AdminContent({ tab }: { tab: string }) {
     case 'users': return <AdminUsers />;
     case 'courses': return <AdminCourses />;
     case 'curriculum': return <AdminCurriculum />;
+    case 'lessons': return <AdminLessons />;
     case 'questions': return <AdminQuestions />;
     case 'exams': return <AdminExams />;
-    case 'articles': return <AdminArticles />;
     case 'media': return <AdminMedia />;
     case 'homepage': return <AdminHomepage />;
     case 'seo': return <AdminSEO />;

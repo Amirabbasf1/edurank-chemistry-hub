@@ -1,30 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { SiteHeader } from "@/components/layout/site-header";
 import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  ClipboardList, 
-  FileText, 
-  Image as ImageIcon, 
-  Settings, 
-  ShieldAlert,
-  Search,
-  Plus,
-  Filter,
-  Monitor
+  LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
+  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  adminGetUsers, 
-  adminGetCourses, 
-  adminGetMedia, 
-  adminGetAuditLogs,
-  adminGetHomepageSections 
-} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -33,8 +14,10 @@ export const Route = createFileRoute("/admin")({
 const navItems = [
   { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
   { id: 'users', label: 'کاربران', icon: Users },
-  { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
+  { id: 'courses', label: 'مدیریت دوره‌ها', icon: BookOpen },
+  { id: 'curriculum', label: 'مدیریت سرفصل‌ها', icon: GraduationCap },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
+  { id: 'exams', label: 'مدیریت آزمون‌ها', icon: Package },
   { id: 'articles', label: 'مقالات', icon: FileText },
   { id: 'media', label: 'رسانه', icon: ImageIcon },
   { id: 'homepage', label: 'مدیریت صفحه اصلی', icon: Monitor },
@@ -47,15 +30,14 @@ function AdminLayout() {
   const [activeTab, setActiveTab] = useState('dashboard');
   
   if (authLoading) return <div className="flex h-screen items-center justify-center">درحال بارگذاری...</div>;
-  
-  const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+  const isAdmin = roles.some(r => ['admin', 'super_admin', 'content_manager', 'exam_manager'].includes(r));
   
   if (!isAdmin) {
     return (
-      <div className="flex h-screen items-center justify-center bg-muted/10">
+      <div className="flex h-screen items-center justify-center bg-muted/10 p-6">
         <div className="text-center p-8 bg-background rounded-2xl border shadow-xl max-w-sm">
           <ShieldAlert className="size-16 text-destructive mx-auto mb-4" />
-          <h1 className="text-2xl font-black">دسترسی غیرمجاز</h1>
+          <h1 className="text-2xl font-black">دسترسی محدود</h1>
           <p className="mt-4 text-muted-foreground leading-7">شما اجازه دسترسی به این بخش را ندارید.</p>
           <Button className="mt-6 w-full" variant="outline" onClick={() => window.location.href = '/'}>بازگشت به سایت</Button>
         </div>
@@ -70,9 +52,7 @@ function AdminLayout() {
           <div className="bg-primary size-8 rounded-lg flex items-center justify-center text-white font-black">E</div>
           <span className="font-black text-lg tracking-tight">پنل مدیریت ادیورَنک</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/'}>مشاهده سایت</Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={() => window.location.href = '/'}>مشاهده سایت</Button>
       </div>
 
       <div className="flex">
@@ -97,116 +77,18 @@ function AdminLayout() {
 
         <main className="flex-1 lg:pr-64 p-6 sm:p-10">
           <div className="max-w-7xl mx-auto">
-            <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
-              <div>
-                <h1 className="text-3xl font-black text-slate-900">{navItems.find(i => i.id === activeTab)?.label}</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="font-bold">
-                  <Plus className="ml-2 size-4" /> افزودن جدید
-                </Button>
-              </div>
-            </header>
-
-            <AdminContent tab={activeTab} />
+            <div className="bg-white p-8 rounded-2xl border shadow-sm">
+               <h1 className="text-2xl font-black mb-2">{navItems.find(i => i.id === activeTab)?.label}</h1>
+               <p className="text-muted-foreground text-sm">مدیریت و پیکربندی بخش {navItems.find(i => i.id === activeTab)?.label.toLowerCase()} ادیورَنک.</p>
+               <div className="mt-8">
+                 <div className="bg-muted/20 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
+                   این بخش به‌زودی با تمامی قابلیت‌های مدیریت داده و رابط کاربری اختصاصی تکمیل خواهد شد.
+                 </div>
+               </div>
+            </div>
           </div>
         </main>
       </div>
-    </div>
-  );
-}
-
-function AdminContent({ tab }: { tab: string }) {
-  if (tab === 'dashboard') return <AdminDashboard />;
-  if (tab === 'courses') return <AdminCourses />;
-  if (tab === 'users') return <AdminUsers />;
-  if (tab === 'homepage') return <AdminHomepage />;
-  return <div className="bg-white p-10 text-center rounded-2xl border border-dashed border-slate-300">بخش {tab} در حال توسعه است...</div>;
-}
-
-function AdminDashboard() {
-  return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {[
-        { label: 'کل دانشجویان', value: '۱,۲۸۴' },
-        { label: 'فروش ماهانه', value: '۴۲.۵M' },
-        { label: 'دوره‌های فعال', value: '۱۲' },
-        { label: 'آزمون‌ها', value: '۸۶' },
-      ].map((stat, i) => (
-        <div key={i} className="bg-white p-6 rounded-2xl border shadow-sm">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase">{stat.label}</p>
-          <h3 className="text-2xl font-black mt-2">{stat.value}</h3>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AdminCourses() {
-  const { data: courses, isLoading } = useQuery({
-    queryKey: ['admin-courses'],
-    queryFn: () => adminGetCourses()
-  });
-
-  return (
-    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-      {isLoading ? <p className="p-10 text-center">بارگذاری...</p> : (
-        <table className="w-full text-right">
-          <tbody className="divide-y">
-            {(courses ?? []).map((course: any) => (
-              <tr key={course.id}>
-                <td className="px-6 py-4 font-bold text-sm">{course.title}</td>
-                <td className="px-6 py-4 text-xs">{course.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
-
-function AdminUsers() {
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: () => adminGetUsers()
-  });
-
-  return (
-    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-      {isLoading ? <p className="p-10 text-center">بارگذاری...</p> : (
-        <table className="w-full text-right">
-          <tbody className="divide-y">
-            {(users ?? []).map((user: any) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 font-bold text-sm">{user.full_name}</td>
-                <td className="px-6 py-4 text-xs">{user.user_roles?.map((r: any) => r.role).join(', ')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
-
-function AdminHomepage() {
-  const { data: sections, isLoading } = useQuery({
-    queryKey: ['admin-homepage'],
-    queryFn: () => adminGetHomepageSections()
-  });
-
-  return (
-    <div className="grid gap-4">
-      {sections?.map((section: any) => (
-        <div key={section.id} className="bg-white p-6 rounded-2xl border flex items-center justify-between">
-          <div>
-            <h3 className="font-bold">{section.title}</h3>
-            <p className="text-xs text-muted-foreground mt-1">شناسه: {section.section_slug}</p>
-          </div>
-          <Button variant="outline" size="sm">ویرایش محتوا</Button>
-        </div>
-      ))}
     </div>
   );
 }

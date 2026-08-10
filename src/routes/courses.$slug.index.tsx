@@ -140,7 +140,7 @@ function CoursePage() {
                   {firstLesson && (
                     <Link
                       to="/courses/$slug/lessons/$lessonSlug"
-                      params={{ slug: course.slug, lessonSlug: (enrollment.last_lesson_id && lessons.find((l) => l.id === enrollment.last_lesson_id)?.slug) || firstLesson.slug }}
+                      params={{ slug: course.slug, lessonSlug: (enrollment.last_lesson_id && lessons.find((l: any) => l.id === enrollment.last_lesson_id)?.slug) || firstLesson.slug }}
                     >
                       <Button className="mt-4 w-full" size="lg">ادامه یادگیری</Button>
                     </Link>
@@ -175,7 +175,7 @@ function CoursePage() {
             <section>
               <h2 className="text-xl font-extrabold">در این دوره یاد می‌گیرید</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                {course.objectives.map((o) => (
+                {course.objectives.map((o: string) => (
                   <li key={o} className="card-surface flex items-start gap-2 p-4 text-sm leading-7">
                     <CheckCircle2 className="mt-1 size-4 shrink-0 text-success" /> {o}
                   </li>
@@ -186,7 +186,7 @@ function CoursePage() {
             <section>
               <h2 className="text-xl font-extrabold">پیش‌نیازها</h2>
               <ul className="mt-4 list-disc space-y-2 ps-5 text-sm leading-8 text-muted-foreground">
-                {course.requirements.map((r) => (
+                {course.requirements.map((r: string) => (
                   <li key={r}>{r}</li>
                 ))}
               </ul>
@@ -195,8 +195,8 @@ function CoursePage() {
             <section>
               <h2 className="text-xl font-extrabold">سرفصل‌های دوره</h2>
               <Accordion type="multiple" className="card-surface mt-4 px-5">
-                {chapters.map((ch) => {
-                  const items = lessons.filter((l) => l.chapter_id === ch.id);
+                {chapters.map((ch: any) => {
+                  const items = lessons.filter((l: any) => l.chapter_id === ch.id);
                   return (
                     <AccordionItem key={ch.id} value={ch.id}>
                       <AccordionTrigger className="text-start text-sm font-bold">
@@ -207,7 +207,7 @@ function CoursePage() {
                       </AccordionTrigger>
                       <AccordionContent>
                         <ul className="space-y-1">
-                          {items.map((l) => (
+                          {items.map((l: any) => (
                             <li key={l.id}>
                               <Link
                                 to="/courses/$slug/lessons/$lessonSlug"
@@ -246,7 +246,7 @@ function CoursePage() {
             <div>
               <h2 className="mb-4 font-bold">دوره‌های مرتبط</h2>
               <div className="grid gap-4">
-                {related.map((r) => (
+                {related.map((r: any) => (
                   <CourseCard key={r.id} course={{ ...r, difficulty: null, duration_minutes: null, lesson_count: null }} />
                 ))}
               </div>

@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Star,
   Quote,
+  Zap,
 } from "lucide-react";
 import { getHomeData } from "@/lib/public.functions";
 import { Hero3D } from "@/components/edurank/hero-3d";
@@ -117,7 +118,7 @@ function Home() {
         {/* LEVELS */}
         <Section title="پایه تحصیلی خود را انتخاب کنید" subtitle="محتوای هر پایه بر اساس بودجه‌بندی کتاب درسی تنظیم شده است.">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {data.categories.map((c) => (
+            {data.categories.map((c: any) => (
               <Link
                 key={c.id}
                 to="/courses"
@@ -136,7 +137,7 @@ function Home() {
         {/* FEATURED */}
         <Section title="دوره‌های منتخب" subtitle="پرطرفدارترین دوره‌های ادیورَنک" action={{ to: "/courses", label: "همه دوره‌ها" }}>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {data.featured.map((c) => (
+            {data.featured.map((c: any) => (
               <CourseCard key={c.id} course={c} />
             ))}
           </div>
@@ -160,6 +161,59 @@ function Home() {
           </div>
         </section>
 
+        {/* AI PREVIEW */}
+        <section className="bg-primary/5 py-16">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+            <div className="card-surface flex flex-col items-center gap-8 overflow-hidden p-8 lg:flex-row lg:p-12">
+              <div className="flex-1 text-center lg:text-start">
+                <Badge variant="secondary" className="mb-4">
+                  <Zap className="me-2 size-3 fill-current" /> تکنولوژی هوش مصنوعی
+                </Badge>
+                <h2 className="text-2xl font-extrabold sm:text-3xl">دستیار هوشمند شیمی ادیورَنک</h2>
+                <p className="mt-4 text-balance-fa text-muted-foreground">
+                  هر جا در حل مسائل شیمی یا درک مفاهیم به مشکل خوردید، دستیار هوشمند ما آماده پاسخگویی ۲۴ ساعته به شماست.
+                </p>
+                <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+                  <Link to="/ai-tutor">
+                    <Button size="lg" className="bg-primary hover:bg-primary/90">
+                      شروع گفتگو با AI
+                    </Button>
+                  </Link>
+                  <Link to="/tools">
+                    <Button variant="outline" size="lg">
+                      مشاهده ابزارهای محاسباتی
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="flex flex-1 justify-center lg:justify-end">
+                <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl border bg-card shadow-2xl">
+                  <div className="flex h-full flex-col p-4">
+                    <div className="flex items-center gap-3 border-b pb-3">
+                      <div className="size-8 rounded-full bg-primary/20 p-1.5 text-primary">
+                        <Bot className="size-full" />
+                      </div>
+                      <span className="text-sm font-bold">دستیار هوشمند ادیورَنک</span>
+                    </div>
+                    <div className="mt-4 flex flex-col gap-3 overflow-hidden">
+                      <div className="self-end rounded-2xl rounded-te-none bg-primary px-4 py-2 text-xs text-primary-foreground">
+                        فرمول غلظت مولی چیه؟
+                      </div>
+                      <div className="self-start rounded-2xl rounded-ts-none bg-secondary px-4 py-2 text-xs text-foreground">
+                        غلظت مولی (M) برابر است با مقدار مول حل‌شونده تقسیم بر حجم کل محلول به لیتر.
+                      </div>
+                      <div className="self-start rounded-2xl rounded-ts-none bg-secondary px-4 py-2 text-xs font-bold text-primary">
+                        M = n / V
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
         {/* PATH */}
         <Section title="مسیر یادگیری شیمی" subtitle="از مفاهیم پایه تا تسلط کامل برای کنکور">
           <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -178,7 +232,7 @@ function Home() {
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <h2 className="text-2xl font-extrabold sm:text-3xl">تجربه دانش‌آموزان</h2>
             <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              {data.testimonials.map((t) => (
+              {data.testimonials.map((t: any) => (
                 <figure key={t.id} className="card-surface p-6">
                   <Quote className="size-6 text-accent" aria-hidden />
                   <blockquote className="mt-3 text-sm leading-8 text-foreground">{t.body}</blockquote>
@@ -200,7 +254,7 @@ function Home() {
         {/* ARTICLES */}
         <Section title="آخرین مقالات" subtitle="دانشنامه شیمی ادیورَنک" action={{ to: "/articles", label: "همه مقالات" }}>
           <div className="grid gap-5 lg:grid-cols-3">
-            {data.articles.map((a) => (
+            {data.articles.map((a: any) => (
               <Link
                 key={a.id}
                 to="/articles/$slug"
@@ -220,7 +274,7 @@ function Home() {
         {/* FAQ */}
         <Section title="سوالات متداول" subtitle="پاسخ پرتکرارترین پرسش‌های شما">
           <Accordion type="single" collapsible className="card-surface px-5">
-            {data.faqs.map((f) => (
+            {data.faqs.map((f: any) => (
               <AccordionItem key={f.id} value={f.id}>
                 <AccordionTrigger className="text-start text-sm font-bold">{f.question}</AccordionTrigger>
                 <AccordionContent className="text-sm leading-8 text-muted-foreground">{f.answer}</AccordionContent>

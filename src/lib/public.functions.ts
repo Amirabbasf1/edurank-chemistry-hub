@@ -208,3 +208,46 @@ export const getExam = createServerFn({ method: "GET" })
       }));
     return { exam, questions };
   });
+
+export const getPeriodicTable = createServerFn({ method: "GET" }).handler(async () => {
+  const db = publicClient();
+  const { data } = await db.from("periodic_table").select("*").order("atomic_number");
+  return data ?? [];
+});
+
+export const getTopicsMastery = createServerFn({ method: "GET" })
+  .inputValidator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    const db = publicClient();
+    const { data: mastery } = await db
+      .from("topic_mastery")
+      .select("*, topics(*)")
+      .eq("user_id", data.userId);
+    return mastery ?? [];
+  });
+
+export const getMistakeNotebook = createServerFn({ method: "GET" })
+  .inputValidator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    const db = publicClient();
+    const { data: mistakes } = await db
+      .from("mistake_notebook")
+      .select("*, questions(*, topics(*))")
+      .eq("user_id", data.userId)
+      .eq("is_resolved", false)
+      .order("last_attempt_at", { ascending: false });
+    return mistakes ?? [];
+  });
+
+export const getNotifications = createServerFn({ method: "GET" })
+  .inputValidator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    const db = publicClient();
+    const { data: notifications } = await db
+      .from("notifications")
+      .select("*")
+      .eq("user_id", data.userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    return notifications ?? [];
+  });

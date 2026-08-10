@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Timer, CheckCircle2, XCircle } from "lucide-react";
+import { Timer, CheckCircle2, XCircle, Bookmark, Flag, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { getExam } from "@/lib/public.functions";
 import { submitExam, type ExamResult } from "@/lib/exam.functions";
@@ -50,6 +50,8 @@ function ExamPage() {
   const [started, setStarted] = useState(false);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
+  const [bookmarks, setBookmarks] = useState<Record<string, boolean>>({});
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [seconds, setSeconds] = useState(exam.duration_minutes * 60);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -63,23 +65,12 @@ function ExamPage() {
       const payload = {
         examId: exam.id,
         timeSpentSeconds: exam.duration_minutes * 60 - seconds,
-        answers: questions.map((q) => ({ questionId: q.id, optionId: answers[q.id] ?? null })),
+        answers: questions.map((q: any) => ({ questionId: q.id, optionId: answers[q.id] ?? null })),
       };
       const res = await grade({ data: payload });
       setResult(res);
-      if (user) {
-        await supabase.from("exam_attempts").insert({
-          user_id: user.id,
-          exam_id: exam.id,
-          score: res.score,
-          max_score: res.maxScore,
-          correct_count: res.correctCount,
-          wrong_count: res.wrongCount,
-          unanswered_count: res.unansweredCount,
-          time_spent_seconds: payload.timeSpentSeconds,
-          submitted_at: new Date().toISOString(),
-        });
-      }
+      // Backend handling is now inside submitExam server function.
+      // We removed redundant client-side insert to exam_attempts.
     } catch {
       toast.error("ثبت آزمون انجام نشد. دوباره تلاش کنید.");
     } finally {
@@ -133,38 +124,69 @@ function ExamPage() {
         {started && !result && q && (
           <>
             <div className="card-surface mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
-              <span className="inline-flex items-center gap-2 font-bold text-primary">
-                <Timer className="size-4" /> {toFaDigits(mm)}:{toFaDigits(ss)}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                پاسخ‌داده: {faNumber(answeredCount)} از {faNumber(questions.length)}
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="inline-flex items-center gap-2 font-bold text-primary">
+                  <Timer className="size-4" /> {toFaDigits(mm)}:{toFaDigits(ss)}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  پاسخ‌داده: {faNumber(answeredCount)} از {faNumber(questions.length)}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant={flags[q.id] ? "destructive" : "outline"}
+                  onClick={() => setFlags(f => ({ ...f, [q.id]: !f[q.id] }))}
+                >
+                  <Flag className={`size-4 ${flags[q.id] ? 'fill-current' : ''}`} />
+                  {flags[q.id] ? "پرچم‌گذاری شده" : "شک دارم"}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={bookmarks[q.id] ? "secondary" : "outline"}
+                  onClick={() => setBookmarks(b => ({ ...b, [q.id]: !b[q.id] }))}
+                >
+                  <Bookmark className={`size-4 ${bookmarks[q.id] ? 'fill-current' : ''}`} />
+                  نشان‌گذاری
+                </Button>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {questions.map((item, i) => (
+              {questions.map((item: any, i: number) => (
                 <button
                   key={item.id}
                   onClick={() => setCurrent(i)}
                   aria-label={`سؤال ${i + 1}`}
-                  className={`size-9 rounded-lg text-xs font-bold transition-colors ${
+                  className={`relative size-10 rounded-xl text-xs font-bold transition-all ${
                     i === current
-                      ? "bg-primary text-primary-foreground"
+                      ? "ring-2 ring-primary ring-offset-2 bg-primary text-primary-foreground"
                       : answers[item.id]
-                        ? "bg-success/15 text-success"
+                        ? "bg-primary/10 text-primary border border-primary/20"
                         : "bg-secondary text-muted-foreground"
                   }`}
                 >
                   {toFaDigits(i + 1)}
+                  {flags[item.id] && (
+                    <span className="absolute -top-1 -end-1 size-3 rounded-full bg-destructive border-2 border-background" />
+                  )}
+                  {bookmarks[item.id] && (
+                    <span className="absolute -bottom-1 -end-1 size-3 rounded-full bg-accent border-2 border-background" />
+                  )}
                 </button>
               ))}
             </div>
 
             <div className="card-surface mt-6 p-7">
-              <p className="text-sm text-muted-foreground">سؤال {toFaDigits(current + 1)}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">سؤال {toFaDigits(current + 1)}</p>
+                {q.source && (
+                  <Badge variant="outline" className="text-[10px]">{q.source}</Badge>
+                )}
+              </div>
               <h2 className="mt-3 text-lg font-bold leading-9">{q.body}</h2>
               <ul className="mt-6 space-y-3">
-                {q.question_options.map((o) => (
+                {q.question_options.map((o: any) => (
                   <li key={o.id}>
                     <button
                       onClick={() => setAnswers((a) => ({ ...a, [q.id]: a[q.id] === o.id ? null : o.id }))}
@@ -178,13 +200,23 @@ function ExamPage() {
                 ))}
               </ul>
               <div className="mt-7 flex items-center justify-between gap-3">
-                <Button variant="outline" onClick={() => setCurrent((c) => Math.max(0, c - 1))} disabled={current === 0}>
-                  قبلی
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrent((c) => Math.max(0, c - 1))} 
+                  disabled={current === 0}
+                  className="gap-2"
+                >
+                  <ChevronRight className="size-4" /> قبلی
                 </Button>
                 {current === questions.length - 1 ? (
-                  <Button onClick={finish} disabled={busy}>پایان آزمون</Button>
+                  <Button onClick={finish} disabled={busy} className="bg-success hover:bg-success/90">پایان آزمون</Button>
                 ) : (
-                  <Button onClick={() => setCurrent((c) => Math.min(questions.length - 1, c + 1))}>بعدی</Button>
+                  <Button 
+                    onClick={() => setCurrent((c) => Math.min(questions.length - 1, c + 1))}
+                    className="gap-2"
+                  >
+                    بعدی <ChevronLeft className="size-4" />
+                  </Button>
                 )}
               </div>
             </div>
@@ -212,8 +244,8 @@ function ExamPage() {
             </div>
 
             <h2 className="text-xl font-extrabold">پاسخ تشریحی</h2>
-            {questions.map((item, i) => {
-              const detail = result.perQuestion.find((p) => p.questionId === item.id);
+            {questions.map((item: any, i: number) => {
+              const detail = result.perQuestion.find((p: any) => p.questionId === item.id);
               return (
                 <div key={item.id} className="card-surface p-6">
                   <div className="flex items-start gap-2">
@@ -225,7 +257,7 @@ function ExamPage() {
                     <h3 className="font-bold leading-8">{toFaDigits(i + 1)}. {item.body}</h3>
                   </div>
                   <ul className="mt-4 space-y-2 text-sm">
-                    {item.question_options.map((o) => {
+                    {item.question_options.map((o: any) => {
                       const isKey = detail?.correctOptionId === o.id;
                       const chosen = answers[item.id] === o.id;
                       return (

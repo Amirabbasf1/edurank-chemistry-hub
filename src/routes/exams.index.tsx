@@ -37,7 +37,7 @@ function ExamsPage() {
           </div>
         ) : (
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {exams.map((e) => (
+            {exams.map((e: any) => (
               <div key={e.id} className="card-surface flex flex-col p-6">
                 <div className="flex flex-wrap gap-2">
                   {e.grade && <Badge variant="secondary">{e.grade}</Badge>}

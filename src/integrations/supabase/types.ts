@@ -41,6 +41,73 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_tutor_conversations: {
+        Row: {
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          id: string
+          topic_id: string | null
+          user_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          topic_id?: string | null
+          user_id: string
+        }
+        Update: {
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          topic_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_conversations_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_categories: {
         Row: {
           description: string | null
@@ -253,6 +320,7 @@ export type Database = {
           discount_price: number | null
           duration_minutes: number
           grade: string | null
+          grade_type: Database["public"]["Enums"]["chemistry_grade"] | null
           id: string
           instructor_id: string | null
           instructor_name: string | null
@@ -282,6 +350,7 @@ export type Database = {
           discount_price?: number | null
           duration_minutes?: number
           grade?: string | null
+          grade_type?: Database["public"]["Enums"]["chemistry_grade"] | null
           id?: string
           instructor_id?: string | null
           instructor_name?: string | null
@@ -311,6 +380,7 @@ export type Database = {
           discount_price?: number | null
           duration_minutes?: number
           grade?: string | null
+          grade_type?: Database["public"]["Enums"]["chemistry_grade"] | null
           id?: string
           instructor_id?: string | null
           instructor_name?: string | null
@@ -788,6 +858,47 @@ export type Database = {
           },
         ]
       }
+      mistake_notebook: {
+        Row: {
+          attempts_count: number
+          created_at: string
+          error_pattern: string | null
+          id: string
+          is_resolved: boolean
+          last_attempt_at: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          attempts_count?: number
+          created_at?: string
+          error_pattern?: string | null
+          id?: string
+          is_resolved?: boolean
+          last_attempt_at?: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          attempts_count?: number
+          created_at?: string
+          error_pattern?: string | null
+          id?: string
+          is_resolved?: boolean
+          last_attempt_at?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mistake_notebook_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           content: string
@@ -853,6 +964,51 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      periodic_table: {
+        Row: {
+          atomic_mass: number | null
+          atomic_number: number
+          description_fa: string | null
+          electron_configuration: string | null
+          electronegativity: number | null
+          group_num: number | null
+          name_en: string
+          name_fa: string
+          period: number | null
+          physical_state: string | null
+          symbol: string
+          uses_fa: string[] | null
+        }
+        Insert: {
+          atomic_mass?: number | null
+          atomic_number: number
+          description_fa?: string | null
+          electron_configuration?: string | null
+          electronegativity?: number | null
+          group_num?: number | null
+          name_en: string
+          name_fa: string
+          period?: number | null
+          physical_state?: string | null
+          symbol: string
+          uses_fa?: string[] | null
+        }
+        Update: {
+          atomic_mass?: number | null
+          atomic_number?: number
+          description_fa?: string | null
+          electron_configuration?: string | null
+          electronegativity?: number | null
+          group_num?: number | null
+          name_en?: string
+          name_fa?: string
+          period?: number | null
+          physical_state?: string | null
+          symbol?: string
+          uses_fa?: string[] | null
         }
         Relationships: []
       }
@@ -935,55 +1091,70 @@ export type Database = {
       }
       questions: {
         Row: {
+          alternative_solutions: string | null
           body: string
           chapter_id: string | null
           correct_text: string | null
           course_id: string | null
           created_at: string
           difficulty: Database["public"]["Enums"]["difficulty"]
+          estimated_time_seconds: number | null
           explanation: string | null
+          explanation_tips: string | null
           grade: string | null
           id: string
           image_url: string | null
           lesson_id: string | null
           points: number
+          question_type: Database["public"]["Enums"]["lesson_type"] | null
           source: string | null
+          subtopic: string | null
           tags: string[]
           topic_id: string | null
           type: Database["public"]["Enums"]["question_type"]
         }
         Insert: {
+          alternative_solutions?: string | null
           body: string
           chapter_id?: string | null
           correct_text?: string | null
           course_id?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
+          estimated_time_seconds?: number | null
           explanation?: string | null
+          explanation_tips?: string | null
           grade?: string | null
           id?: string
           image_url?: string | null
           lesson_id?: string | null
           points?: number
+          question_type?: Database["public"]["Enums"]["lesson_type"] | null
           source?: string | null
+          subtopic?: string | null
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
         }
         Update: {
+          alternative_solutions?: string | null
           body?: string
           chapter_id?: string | null
           correct_text?: string | null
           course_id?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
+          estimated_time_seconds?: number | null
           explanation?: string | null
+          explanation_tips?: string | null
           grade?: string | null
           id?: string
           image_url?: string | null
           lesson_id?: string | null
           points?: number
+          question_type?: Database["public"]["Enums"]["lesson_type"] | null
           source?: string | null
+          subtopic?: string | null
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
@@ -1057,6 +1228,39 @@ export type Database = {
           },
         ]
       }
+      spaced_reviews: {
+        Row: {
+          created_at: string
+          ease_factor: number
+          id: string
+          item_id: string
+          item_type: string
+          last_interval_days: number
+          next_review_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          item_id: string
+          item_type: string
+          last_interval_days?: number
+          next_review_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          item_id?: string
+          item_type?: string
+          last_interval_days?: number
+          next_review_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
@@ -1089,6 +1293,59 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      tool_usage: {
+        Row: {
+          created_at: string
+          id: string
+          tool_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tool_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tool_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      topic_mastery: {
+        Row: {
+          id: string
+          last_updated: string
+          mastery_score: number
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_updated?: string
+          mastery_score?: number
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_updated?: string
+          mastery_score?: number
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_mastery_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topics: {
         Row: {
@@ -1193,6 +1450,7 @@ export type Database = {
     Enums: {
       access_type: "free" | "paid" | "subscription"
       app_role: "student" | "instructor" | "admin" | "super_admin"
+      chemistry_grade: "grade_10" | "grade_11" | "grade_12" | "konkur"
       course_status: "draft" | "published" | "archived"
       difficulty: "beginner" | "intermediate" | "advanced"
       lesson_type: "video" | "text" | "pdf" | "quiz"
@@ -1330,6 +1588,7 @@ export const Constants = {
     Enums: {
       access_type: ["free", "paid", "subscription"],
       app_role: ["student", "instructor", "admin", "super_admin"],
+      chemistry_grade: ["grade_10", "grade_11", "grade_12", "konkur"],
       course_status: ["draft", "published", "archived"],
       difficulty: ["beginner", "intermediate", "advanced"],
       lesson_type: ["video", "text", "pdf", "quiz"],

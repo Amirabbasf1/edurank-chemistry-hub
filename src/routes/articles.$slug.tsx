@@ -88,7 +88,7 @@ function ArticlePage() {
               {article.author_name} · {faDate(article.published_at)} · {toFaDigits(article.reading_minutes)} دقیقه مطالعه
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
-              {article.tags.map((t) => (
+              {article.tags.map((t: string) => (
                 <Badge key={t} variant="secondary">{t}</Badge>
               ))}
             </div>
@@ -137,7 +137,7 @@ function ArticlePage() {
               <div className="card-surface p-5">
                 <h2 className="text-sm font-bold">مقالات مرتبط</h2>
                 <ul className="mt-3 space-y-3">
-                  {related.map((r) => (
+                  {related.map((r: any) => (
                     <li key={r.id}>
                       <Link to="/articles/$slug" params={{ slug: r.slug }} className="text-sm leading-7 hover:text-primary">
                         {r.title}

@@ -181,15 +181,14 @@ export const listExams = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const getExam = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
+  .inputValidator((data: { slug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: exam } = await db
-      .from("exams")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("is_published", true)
-      .maybeSingle();
+    let query = db.from("exams").select("*").eq("slug", data.slug);
+    if (!data.staffMode) {
+      query = query.eq("is_published", true);
+    }
+    const { data: exam } = await query.maybeSingle();
     if (!exam) return null;
     const { data: rows } = await db
       .from("exam_questions")

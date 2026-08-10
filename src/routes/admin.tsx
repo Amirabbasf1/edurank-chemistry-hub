@@ -49,19 +49,22 @@ export const Route = createFileRoute("/admin")({
 
 const navItems = [
   { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
-  { id: 'users', label: 'کاربران', icon: Users },
   { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
   { id: 'curriculum', label: 'سرفصل‌ها', icon: GraduationCap },
   { id: 'lessons', label: 'دروس', icon: BookOpen },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
   { id: 'exams', label: 'آزمون‌ها', icon: Package },
+  { id: 'users', label: 'کاربران', icon: Users },
   { id: 'articles', label: 'مقالات', icon: FileText },
+  { id: 'pages', label: 'برگه‌ها', icon: FileText },
   { id: 'media', label: 'کتابخانه رسانه', icon: ImageIcon },
   { id: 'homepage', label: 'صفحه اصلی', icon: Monitor },
+  { id: 'menus', label: 'فهرست‌ها', icon: Monitor },
   { id: 'seo', label: 'سئو', icon: Search },
   { id: 'logs', label: 'گزارشات', icon: ShieldAlert },
   { id: 'settings', label: 'تنظیمات', icon: Settings },
 ];
+
 
 function AdminLayout() {
   const { roles, loading: authLoading } = useAuth();

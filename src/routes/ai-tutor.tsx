@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Bot, Send, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useServerFn } from "@tanstack/react-start";
+import { chatWithAI } from "@/lib/ai.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/ai-tutor")({
   ssr: false,
@@ -15,28 +18,48 @@ export const Route = createFileRoute("/ai-tutor")({
 
 function AITutorPage() {
   const { user } = useAuth();
+  const chatFn = useServerFn(chatWithAI);
   const [messages, setMessages] = useState<any[]>([
     { role: "assistant", content: "سلام! من دستیار هوشمند ادیورَنک هستم. چطور می‌تونم در یادگیری شیمی بهت کمک کنم؟" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
+    if (!user) {
+      toast.error("لطفاً برای استفاده از دستیار هوشمند وارد حساب خود شوید.");
+      return;
+    }
     
     const userMsg = { role: "user", content: input };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
-    // Mock response for now, in a real scenario we'd call a server function
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: "من در حال یادگیری سرفصل‌های شیمی شما هستم. به‌زودی می‌تونم به تمام سؤالات علمی شما پاسخ دقیق بدم!" 
-      }]);
-      setLoading(false);
-    }, 1000);
+    try {
+      const res = await chatFn({ 
+        data: { 
+          message: input,
+          conversationId
+        } 
+      });
+      setMessages(prev => [...prev, res.message]);
+      setConversationId(res.conversationId);
+    } catch (err) {
+      toast.error("خطا در برقراری ارتباط با هوش مصنوعی.");
+    } finally {
+      setLoading(true); // Wait a bit
+      setTimeout(() => setLoading(false), 500);
+    }
   };
 
   return (
@@ -86,6 +109,7 @@ function AITutorPage() {
                   </div>
                 </div>
               )}
+              <div ref={scrollRef} />
             </div>
           </ScrollArea>
 

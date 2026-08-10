@@ -180,9 +180,9 @@ function ExamPage() {
             <div className="card-surface mt-6 p-7">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">سؤال {toFaDigits(current + 1)}</p>
-                {q.source && (
+                {/* {q.source && (
                   <Badge variant="outline" className="text-[10px]">{q.source}</Badge>
-                )}
+                )} */}
               </div>
               <h2 className="mt-3 text-lg font-bold leading-9">{q.body}</h2>
               <ul className="mt-6 space-y-3">

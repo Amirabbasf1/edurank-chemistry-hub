@@ -487,39 +487,6 @@ function AdminSettings() {
   );
 }
 
-  const { data: articles } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
-  return (
-    <div className="space-y-6 text-right" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">مدیریت مقالات</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
-      </div>
-      <div className="rounded-xl border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="text-right">عنوان</TableHead>
-              <TableHead className="text-right">نویسنده</TableHead>
-              <TableHead className="text-right">وضعیت</TableHead>
-              <TableHead className="text-right">عملیات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {articles?.map(a => (
-              <TableRow key={a.id}>
-                <TableCell className="font-bold">{a.title}</TableCell>
-                <TableCell>{a.author_name}</TableCell>
-                <TableCell><Badge>{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
 function AdminHomepage() {
   const { data: sections } = useQuery({ queryKey: ['admin-homepage'], queryFn: adminGetHomepageSections });
   return (

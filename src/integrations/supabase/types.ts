@@ -149,6 +149,7 @@ export type Database = {
           related_course_id: string | null
           scheduled_at: string | null
           seo_description: string | null
+          seo_metadata: Json | null
           seo_title: string | null
           slug: string
           tags: string[]
@@ -172,6 +173,7 @@ export type Database = {
           related_course_id?: string | null
           scheduled_at?: string | null
           seo_description?: string | null
+          seo_metadata?: Json | null
           seo_title?: string | null
           slug: string
           tags?: string[]
@@ -195,6 +197,7 @@ export type Database = {
           related_course_id?: string | null
           scheduled_at?: string | null
           seo_description?: string | null
+          seo_metadata?: Json | null
           seo_title?: string | null
           slug?: string
           tags?: string[]
@@ -1132,6 +1135,30 @@ export type Database = {
           },
         ]
       }
+      navigation_menus: {
+        Row: {
+          id: string
+          items: Json
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          items?: Json
+          location: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          items?: Json
+          location?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string
@@ -1197,6 +1224,42 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pages: {
+        Row: {
+          content: string | null
+          created_at: string
+          featured_image: string | null
+          id: string
+          seo_metadata: Json | null
+          slug: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          featured_image?: string | null
+          id?: string
+          seo_metadata?: Json | null
+          slug: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          featured_image?: string | null
+          id?: string
+          seo_metadata?: Json | null
+          slug?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1527,6 +1590,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
       }
       spaced_reviews: {
         Row: {

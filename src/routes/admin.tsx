@@ -612,12 +612,78 @@ function AdminExams() {
 }
 
 function AdminArticles() {
-  const { data: articles } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  const queryClient = useQueryClient();
+  const { data: articles, isLoading } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertArticle({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      setIsDialogOpen(false);
+      toast.success('مقاله با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت مقالات</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingArticle(null)} size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[700px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">انتشار مقاله جدید</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              mutation.mutate({ 
+                ...editingArticle, 
+                title: fd.get('title'),
+                slug: fd.get('slug'),
+                excerpt: fd.get('excerpt'),
+                content: fd.get('content'),
+                author_name: 'مدیریت',
+                is_published: fd.get('published') === 'on'
+              });
+            }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">عنوان مقاله</label>
+                  <Input name="title" defaultValue={editingArticle?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">نامک (Slug)</label>
+                  <Input name="slug" defaultValue={editingArticle?.slug} required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">خلاصه مقاله</label>
+                <Input name="excerpt" defaultValue={editingArticle?.excerpt} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">متن محتوا (Markdown)</label>
+                <textarea 
+                  name="content" 
+                  className="w-full min-h-[200px] p-3 rounded-lg border text-sm font-sans" 
+                  defaultValue={editingArticle?.content}
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" name="published" defaultChecked={editingArticle?.is_published} />
+                <label className="text-xs font-bold">انتشار فوری</label>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold">ذخیره و انتشار</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="rounded-xl border overflow-hidden">
         <Table>
@@ -630,12 +696,14 @@ function AdminArticles() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {articles?.map(a => (
+            {isLoading ? (
+               <TableRow><TableCell colSpan={4} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
+            ) : articles?.map(a => (
               <TableRow key={a.id}>
-                <TableCell className="font-bold">{a.title}</TableCell>
-                <TableCell>{a.author_name}</TableCell>
-                <TableCell><Badge>{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell className="font-bold text-xs">{a.title}</TableCell>
+                <TableCell className="text-xs">{a.author_name}</TableCell>
+                <TableCell><Badge className="text-[10px]">{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>

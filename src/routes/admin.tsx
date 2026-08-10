@@ -347,7 +347,7 @@ function AdminCurriculum() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold flex items-center gap-2"><BookOpen className="size-4" /> لیست فصل‌ها</h3>
-                <Button size="xs" variant="outline" onClick={() => {
+                <Button size="sm" variant="outline" onClick={() => {
                   const title = prompt('عنوان فصل جدید:');
                   if (title) upsertChapter.mutate({ title, sort_order: (curriculum?.chapters?.length || 0) + 1 });
                 }}>افزودن فصل</Button>

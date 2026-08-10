@@ -1,9 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-
-// This is a browser-safe wrapper, actual implementation should be secure
-// In TanStack Start, we use requireSupabaseAuth or similar patterns
 
 export const adminGetUsers = createServerFn({ method: "GET" })
   .handler(async () => {
@@ -68,4 +64,27 @@ export const adminGetAuditLogs = createServerFn({ method: "GET" })
       .limit(100);
     if (error) throw error;
     return data;
+  });
+
+export const adminGetHomepageSections = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabase
+      .from("homepage_sections")
+      .select("*")
+      .order("sort_order");
+    if (error) throw error;
+    return data;
+  });
+
+export const adminUpdateHomepageSection = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string; updates: any }) => data)
+  .handler(async ({ data }) => {
+    const { data: section, error } = await supabase
+      .from("homepage_sections")
+      .update(data.updates)
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return section;
   });

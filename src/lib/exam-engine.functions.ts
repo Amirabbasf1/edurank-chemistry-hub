@@ -178,14 +178,14 @@ export const finalizeExamGrading = createServerFn({ method: "POST" })
       
       const tId = (q as any)?.topic_id;
       if (tId && !topicStats[tId]) topicStats[tId] = { correct: 0, total: 0 };
-      if (tId) topicStats[tId].total += 1;
+      if (tId && topicStats[tId]) topicStats[tId].total += 1;
 
       if (!userAns?.selected_option_id) {
         unansweredCount++;
       } else if (userAns.selected_option_id === correctOpt?.id) {
         correctCount++;
         score += points;
-        if (tId) topicStats[tId].correct += 1;
+        if (tId && topicStats[tId]) topicStats[tId].correct += 1;
       } else {
         wrongCount++;
         if (negativeMarking) score -= (points / 3);

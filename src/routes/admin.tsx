@@ -1300,106 +1300,95 @@ function AdminSEO() {
   );
 }
 
-function AdminLogs() {
-  const { data: logs, isLoading } = useQuery({ queryKey: ['admin-logs'], queryFn: adminGetAuditLogs });
-  return (
-    <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">گزارشات سیستم (Audit Logs)</h2>
-      <div className="rounded-xl border overflow-hidden">
-        <Table>
-          <TableHeader><TableRow><TableHead className="text-right">کاربر</TableHead><TableHead className="text-right">عملیات</TableHead><TableHead className="text-right">نوع</TableHead><TableHead className="text-right">زمان</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
-              logs?.map(log => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-bold">{(log.profiles as any)?.full_name || log.user_id}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell><Badge variant="outline">{log.target_type}</Badge></TableCell>
-                  <TableCell className="text-xs">{faDate(log.created_at)}</TableCell>
-                </TableRow>
-              ))
-            }
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
-function AdminSettings() {
-  return (
-    <div className="space-y-8 text-right" dir="rtl">
-      <h2 className="text-xl font-black">تنظیمات پلتفرم</h2>
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
-          <TabsTrigger value="general">عمومی</TabsTrigger>
-          <TabsTrigger value="branding">برندینگ</TabsTrigger>
-          <TabsTrigger value="learning">آموزش</TabsTrigger>
-          <TabsTrigger value="security">امنیت</TabsTrigger>
-        </TabsList>
-        <TabsContent value="general" className="mt-6 space-y-4">
-          <div className="p-6 border rounded-2xl bg-white shadow-sm max-w-md">
-            <h3 className="font-bold mb-4">تنظیمات عمومی</h3>
-            <p className="text-sm text-muted-foreground">پیکربندی اصلی سایت در این بخش انجام می‌شود.</p>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-function AdminUsers() {
+function AdminMedia() {
   const queryClient = useQueryClient();
-  const { data: users, isLoading } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });
-  const mutation = useMutation({
-    mutationFn: (data: { userId: string; roles: string[] }) => adminUpdateUserRole({ data }),
+  const { data: media, isLoading } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeleteMedia({ data: { id } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('نقش کاربر با موفقیت بروزرسانی شد');
+      queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+      toast.success('فایل حذف شد');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'خطا در حذف فایل');
     }
   });
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">مدیریت کاربران</h2>
-      <div className="rounded-xl border overflow-hidden">
-        <Table>
-          <TableHeader><TableRow><TableHead className="text-right">نام کاربر</TableHead><TableHead className="text-right">ایمیل</TableHead><TableHead className="text-right">نقش‌ها</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
-              users?.map(user => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-bold">{user.full_name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 flex-wrap">
-                      {(user.user_roles as any[])?.map((r, i) => <Badge key={i} variant="outline">{r.role}</Badge>)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select onValueChange={(role) => mutation.mutate({ userId: user.id, roles: [role] })}>
-                      <SelectTrigger className="w-32"><SelectValue placeholder="تغییر نقش" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">مدیر</SelectItem>
-                        <SelectItem value="content_manager">مدیر محتوا</SelectItem>
-                        <SelectItem value="exam_manager">مدیر آزمون</SelectItem>
-                        <SelectItem value="student">دانشجو</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))
-            }
-          </TableBody>
-        </Table>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
+        <Button 
+          size="sm" 
+          className="font-bold gap-2"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e: any) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              
+              const toastId = toast.loading('در حال آپلود...');
+              try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random()}.${fileExt}`;
+                const filePath = `${fileName}`;
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from('media')
+                  .upload(filePath, file);
+                  
+                if (uploadError) throw uploadError;
+                
+                const { data: { publicUrl } } = supabase.storage
+                  .from('media')
+                  .getPublicUrl(filePath);
+                  
+                await adminCreateMediaRecord({
+                  file_name: file.name,
+                  file_url: publicUrl,
+                  file_type: file.type,
+                  file_size: file.size
+                });
+                
+                queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+                toast.success('فایل با موفقیت آپلود شد', { id: toastId });
+              } catch (err: any) {
+                toast.error(err.message || 'خطا در آپلود', { id: toastId });
+              }
+            };
+            input.click();
+          }}
+        >
+          <Plus className="size-4" /> آپلود رسانه
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {isLoading ? <div>در حال بارگذاری...</div> :
+          media?.map(m => (
+            <div key={m.id} className="group relative aspect-square rounded-xl border overflow-hidden bg-muted/20">
+              {m.file_type.startsWith('image/') ? (
+                <img src={m.file_url} alt={m.file_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                  <ImageIcon className="size-8 text-muted-foreground mb-2" />
+                  <span className="text-[10px] font-bold text-center line-clamp-2">{m.file_name}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button size="icon" variant="ghost" className="text-white" onClick={() => window.open(m.file_url, '_blank')}><Eye className="size-4" /></Button>
+                <Button size="icon" variant="ghost" className="text-destructive" onClick={() => { if(confirm('حذف شود؟')) deleteMutation.mutate(m.id) }}><Trash2 className="size-4" /></Button>
+              </div>
+            </div>
+          ))
+        }
       </div>
     </div>
   );
 }
 
-function AdminQuestions() { return <div>بخش سوالات (در حال بروزرسانی)</div>; }
-function AdminExams() { return <div>بخش آزمون‌ها (در حال بروزرسانی)</div>; }
-function AdminMedia() { return <div>کتابخانه رسانه (در حال بروزرسانی)</div>; }
 
 
 

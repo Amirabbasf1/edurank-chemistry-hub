@@ -94,8 +94,10 @@ export const getCourse = createServerFn({ method: "GET" })
     }
     const { data: course } = await query.maybeSingle();
     if (!course) return null;
-    const [chapters, lessons, reviews, related] = await Promise.all([
+    const [chapters, topics, subtopics, lessons, reviews, related] = await Promise.all([
       db.from("chapters").select("*").eq("course_id", course.id).order("sort_order"),
+      db.from("topics").select("*").order("sort_order"),
+      db.from("subtopics").select("*").order("sort_order"),
       db.from("lessons").select("*").eq("course_id", course.id).order("sort_order"),
       db.from("reviews").select("*").eq("course_id", course.id).eq("is_approved", true),
       db
@@ -108,6 +110,8 @@ export const getCourse = createServerFn({ method: "GET" })
     return {
       course,
       chapters: chapters.data ?? [],
+      topics: topics.data ?? [],
+      subtopics: subtopics.data ?? [],
       lessons: lessons.data ?? [],
       reviews: reviews.data ?? [],
       related: related.data ?? [],
@@ -124,9 +128,11 @@ export const getLesson = createServerFn({ method: "GET" })
     }
     const { data: course } = await courseQuery.maybeSingle();
     if (!course) return null;
-    const [lessonRes, chapters, lessons] = await Promise.all([
+    const [lessonRes, chapters, topics, subtopics, lessons] = await Promise.all([
       db.from("lessons").select("*").eq("course_id", course.id).eq("slug", data.lessonSlug).maybeSingle(),
       db.from("chapters").select("*").eq("course_id", course.id).order("sort_order"),
+      db.from("topics").select("*").order("sort_order"),
+      db.from("subtopics").select("*").order("sort_order"),
       db.from("lessons").select("*").eq("course_id", course.id).order("sort_order"),
     ]);
     if (!lessonRes.data) return null;
@@ -134,6 +140,8 @@ export const getLesson = createServerFn({ method: "GET" })
       course,
       lesson: lessonRes.data,
       chapters: chapters.data ?? [],
+      topics: topics.data ?? [],
+      subtopics: subtopics.data ?? [],
       lessons: lessons.data ?? [],
     };
   });

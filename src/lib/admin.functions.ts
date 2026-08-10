@@ -127,6 +127,14 @@ export const adminGetLessons = createServerFn({ method: "GET" })
     return lessons;
   });
 
+export const adminDeleteSubtopic = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("subtopics").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
 export const adminUpsertLesson = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {

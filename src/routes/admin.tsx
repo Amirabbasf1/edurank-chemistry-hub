@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   adminGetCourses, adminCreateCourse, adminUpdateCourse,
-  adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic,
+  adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic, adminDeleteSubtopic,
   adminGetMedia, adminDeleteMedia,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion,

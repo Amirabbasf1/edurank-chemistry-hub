@@ -444,9 +444,14 @@ export const adminUpdateSiteSetting = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: res, error } = await supabase
       .from("site_settings")
-      .upsert({ key: data.key, value: data.value, description: data.description })
+      .upsert({ 
+        key: data.key, 
+        value: data.value, 
+        description: data.description ?? null 
+      })
       .select()
       .single();
+
     if (error) throw error;
     return res;
   });

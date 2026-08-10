@@ -11,9 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AiTutorRouteImport } from './routes/ai-tutor'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as MistakesRouteImport } from './routes/mistakes'
+import { Route as PeriodicTableRouteImport } from './routes/periodic-table'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
@@ -32,6 +36,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiTutorRoute = AiTutorRouteImport.update({
+  id: '/ai-tutor',
+  path: '/ai-tutor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -45,6 +54,21 @@ const ContactRoute = ContactRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MistakesRoute = MistakesRouteImport.update({
+  id: '/mistakes',
+  path: '/mistakes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeriodicTableRoute = PeriodicTableRouteImport.update({
+  id: '/periodic-table',
+  path: '/periodic-table',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
@@ -87,9 +111,13 @@ const CoursesSlugLessonsLessonSlugRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/mistakes': typeof MistakesRoute
+  '/periodic-table': typeof PeriodicTableRoute
+  '/tools': typeof ToolsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -101,9 +129,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/mistakes': typeof MistakesRoute
+  '/periodic-table': typeof PeriodicTableRoute
+  '/tools': typeof ToolsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/articles': typeof ArticlesIndexRoute
@@ -116,9 +148,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/mistakes': typeof MistakesRoute
+  '/periodic-table': typeof PeriodicTableRoute
+  '/tools': typeof ToolsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/exams/$slug': typeof ExamsSlugRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -132,9 +168,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/ai-tutor'
     | '/auth'
     | '/contact'
     | '/dashboard'
+    | '/mistakes'
+    | '/periodic-table'
+    | '/tools'
     | '/articles/$slug'
     | '/exams/$slug'
     | '/articles/'
@@ -146,9 +186,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/ai-tutor'
     | '/auth'
     | '/contact'
     | '/dashboard'
+    | '/mistakes'
+    | '/periodic-table'
+    | '/tools'
     | '/articles/$slug'
     | '/exams/$slug'
     | '/articles'
@@ -160,9 +204,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/ai-tutor'
     | '/auth'
     | '/contact'
     | '/dashboard'
+    | '/mistakes'
+    | '/periodic-table'
+    | '/tools'
     | '/articles/$slug'
     | '/exams/$slug'
     | '/articles/'
@@ -175,9 +223,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AiTutorRoute: typeof AiTutorRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  MistakesRoute: typeof MistakesRoute
+  PeriodicTableRoute: typeof PeriodicTableRoute
+  ToolsRoute: typeof ToolsRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ExamsSlugRoute: typeof ExamsSlugRoute
   ArticlesIndexRoute: typeof ArticlesIndexRoute
@@ -203,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-tutor': {
+      id: '/ai-tutor'
+      path: '/ai-tutor'
+      fullPath: '/ai-tutor'
+      preLoaderRoute: typeof AiTutorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -222,6 +281,27 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mistakes': {
+      id: '/mistakes'
+      path: '/mistakes'
+      fullPath: '/mistakes'
+      preLoaderRoute: typeof MistakesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/periodic-table': {
+      id: '/periodic-table'
+      path: '/periodic-table'
+      fullPath: '/periodic-table'
+      preLoaderRoute: typeof PeriodicTableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/articles/': {
@@ -279,9 +359,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AiTutorRoute: AiTutorRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  MistakesRoute: MistakesRoute,
+  PeriodicTableRoute: PeriodicTableRoute,
+  ToolsRoute: ToolsRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ExamsSlugRoute: ExamsSlugRoute,
   ArticlesIndexRoute: ArticlesIndexRoute,

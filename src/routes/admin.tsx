@@ -577,53 +577,6 @@ function QuestionBuilderDialog({ isOpen, onClose, question }: { isOpen: boolean,
   );
 }
 
-function AdminMedia() {
-  const { data: media } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
-  return (
-    <div className="space-y-6 text-right" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
-        <Button 
-          size="sm" 
-          className="font-bold gap-2"
-          onClick={async () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = async (e: any) => {
-              const file = e.target.files[0];
-              if (!file) return;
-              const { supabase } = await import('@/integrations/supabase/client');
-              const { adminCreateMediaRecord } = await import('@/lib/admin-media.functions');
-              const { data, error } = await supabase.storage.from('media').upload(`${Date.now()}-${file.name}`, file);
-              if (error) { toast.error('خطا در آپلود'); return; }
-              const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
-              await adminCreateMediaRecord({ data: { filename: file.name, file_url: publicUrl, file_type: file.type, file_size: file.size } });
-              toast.success('فایل با موفقیت آپلود شد');
-              window.location.reload();
-            };
-            input.click();
-          }}
-        >
-          <Plus className="size-4" /> آپلود فایل
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {media?.map(m => (
-          <div key={m.id} className="group relative aspect-square rounded-xl border bg-muted/20 overflow-hidden hover:shadow-md transition-all">
-            {m.file_type.startsWith('image') ? (
-               <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
-            ) : (
-               <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon className="size-8" /></div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-[10px] text-white truncate">{m.filename}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function AdminUsers() {
   const { data: users } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });

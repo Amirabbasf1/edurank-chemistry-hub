@@ -11,6 +11,7 @@ const NAV = [
   { to: "/articles", label: "مقالات" },
   { to: "/periodic-table", label: "جدول تناوبی" },
   { to: "/tools", label: "ابزارها" },
+  { to: "/ai-tutor", label: "دستیار هوشمند" },
   { to: "/about", label: "درباره ما" },
   { to: "/contact", label: "تماس" },
 ] as const;

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const submitSchema = z.object({
@@ -23,13 +24,12 @@ export type ExamResult = {
  * Reads answer keys with elevated access, but only ever returns grading output.
  */
 export const submitExam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => submitSchema.parse(data))
-  .handler(async ({ data }): Promise<ExamResult> => {
+  .handler(async ({ data, context }): Promise<ExamResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getSupabaseServerClient } = await import("@/integrations/supabase/auth-middleware");
-    const request = new Request("http://localhost"); // Dummy for context
-    const supabase = getSupabaseServerClient(request);
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = context.supabase;
+    const userId = context.userId;
 
     const questionIds = data.answers.map((a) => a.questionId);
     const [{ data: questions }, { data: options }] = await Promise.all([
@@ -48,7 +48,7 @@ export const submitExam = createServerFn({ method: "POST" })
 
     for (const answer of data.answers) {
       const question = (questions ?? []).find((q) => q.id === answer.questionId);
-      const points = question?.points ?? 1;
+      const points = (question as any)?.points ?? 1;
       maxScore += points;
       const correct = (options ?? []).find((o) => o.question_id === answer.questionId && o.is_correct);
       const isCorrect = Boolean(answer.optionId && correct && answer.optionId === correct.id);
@@ -59,44 +59,48 @@ export const submitExam = createServerFn({ method: "POST" })
         score += points;
       } else {
         wrongCount += 1;
-        if (user && answer.questionId) {
-          // Add to mistake notebook
+        if (userId && answer.questionId) {
+          // Add to mistake notebook using admin client to bypass RLS if needed, 
+          // but better to use the user's supabase client if policies allow.
+          // Using admin here to ensure the notebook entry is created reliably.
           await supabaseAdmin.from("mistake_notebook").upsert({
-            user_id: user.id,
+            user_id: userId,
             question_id: answer.questionId,
             review_count: 0,
           }, { onConflict: "user_id,question_id" });
 
-          if (question?.topic_id) incorrectTopicIds.push(question.topic_id);
+          if ((question as any)?.topic_id) {
+            incorrectTopicIds.push((question as any).topic_id);
+          }
         }
       }
       perQuestion.push({ questionId: answer.questionId, correctOptionId: correct?.id ?? null, isCorrect });
     }
 
     // Record exam attempt
-    if (user) {
+    if (userId) {
       await supabaseAdmin.from("exams_attempts").insert({
-        user_id: user.id,
+        user_id: userId,
         exam_id: data.examId,
         score,
         max_score: maxScore,
         time_spent_seconds: data.timeSpentSeconds,
-        details: { perQuestion },
+        details: { perQuestion } as any,
       });
 
-      // Update mastery for incorrect topics (simple reduction for now)
+      // Update mastery for incorrect topics
       if (incorrectTopicIds.length > 0) {
         for (const tid of [...new Set(incorrectTopicIds)]) {
           const { data: currentMastery } = await supabaseAdmin
             .from("topic_mastery")
             .select("mastery_score")
-            .eq("user_id", user.id)
+            .eq("user_id", userId)
             .eq("topic_id", tid)
-            .single();
+            .maybeSingle();
           
-          const newScore = Math.max(0, (currentMastery?.mastery_score ?? 50) - 5);
+          const newScore = Math.max(0, ((currentMastery as any)?.mastery_score ?? 50) - 5);
           await supabaseAdmin.from("topic_mastery").upsert({
-            user_id: user.id,
+            user_id: userId,
             topic_id: tid,
             mastery_score: newScore,
             last_tested_at: new Date().toISOString(),

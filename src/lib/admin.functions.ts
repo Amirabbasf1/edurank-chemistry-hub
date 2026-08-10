@@ -67,7 +67,8 @@ export const adminUpdateCourse = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .single();
-    if (error, !course) throw error || new Error("Course not found");
+    if (error) throw error;
+    if (!course) throw new Error("Course not found");
     return course;
   });
 

@@ -159,16 +159,97 @@ function AdminDashboard() {
 }
 
 function AdminCourses() {
+  const queryClient = useQueryClient();
   const { data: courses, isLoading } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
-  const [isAdding, setIsAdding] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => data.id ? adminUpdateCourse({ id: data.id, updates: data }) : adminCreateCourse(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
+      setIsDialogOpen(false);
+      setEditingCourse(null);
+      toast.success('دوره با موفقیت ذخیره شد');
+    }
+  });
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت دوره‌ها</h2>
-        <Button onClick={() => setIsAdding(true)} size="sm" className="font-bold gap-2">
-          <Plus className="size-4" /> افزودن دوره جدید
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingCourse(null)} size="sm" className="font-bold gap-2">
+              <Plus className="size-4" /> افزودن دوره جدید
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">{editingCourse ? 'ویرایش دوره' : 'ایجاد دوره جدید'}</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = Object.fromEntries(formData.entries());
+              mutation.mutate({ ...editingCourse, ...data, price: Number(data.price), discount_price: Number(data.discount_price) });
+            }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">عنوان دوره</label>
+                  <Input name="title" defaultValue={editingCourse?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">نامک (Slug)</label>
+                  <Input name="slug" defaultValue={editingCourse?.slug} required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">توضیح کوتاه</label>
+                <Input name="short_description" defaultValue={editingCourse?.short_description} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">قیمت (تومان)</label>
+                  <Input name="price" type="number" defaultValue={editingCourse?.price} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">قیمت با تخفیف</label>
+                  <Input name="discount_price" type="number" defaultValue={editingCourse?.discount_price} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">پایه تحصیلی</label>
+                  <Select name="grade" defaultValue={editingCourse?.grade || 'دهم'}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="دهم">دهم</SelectItem>
+                      <SelectItem value="یازدهم">یازدهم</SelectItem>
+                      <SelectItem value="دوازدهم">دوازدهم</SelectItem>
+                      <SelectItem value="کنکور">کنکور</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">وضعیت انتشار</label>
+                  <Select name="status" defaultValue={editingCourse?.status || 'draft'}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">پیش‌نویس</SelectItem>
+                      <SelectItem value="published">منتشر شده</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold" disabled={mutation.isPending}>
+                  {mutation.isPending ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="rounded-xl border overflow-hidden">
@@ -184,7 +265,7 @@ function AdminCourses() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10">درحال بارگذاری...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-xs">درحال بارگذاری...</TableCell></TableRow>
             ) : courses?.map(course => (
               <TableRow key={course.id}>
                 <TableCell className="font-bold">{course.title}</TableCell>
@@ -196,7 +277,10 @@ function AdminCourses() {
                 </TableCell>
                 <TableCell>{faNumber(course.students_count)}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">ویرایش</Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setEditingCourse(course);
+                    setIsDialogOpen(true);
+                  }}>ویرایش</Button>
                 </TableCell>
               </TableRow>
             ))}

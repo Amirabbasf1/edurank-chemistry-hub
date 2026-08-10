@@ -495,7 +495,29 @@ function AdminMedia() {
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">کتابخانه رسانه</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آپلود فایل</Button>
+        <Button 
+          size="sm" 
+          className="font-bold gap-2"
+          onClick={async () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e: any) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const { supabase } = await import('@/integrations/supabase/client');
+              const { adminCreateMediaRecord } = await import('@/lib/admin-media.functions');
+              const { data, error } = await supabase.storage.from('media').upload(`${Date.now()}-${file.name}`, file);
+              if (error) { toast.error('خطا در آپلود'); return; }
+              const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
+              await adminCreateMediaRecord({ data: { filename: file.name, file_url: publicUrl, file_type: file.type, file_size: file.size } });
+              toast.success('فایل با موفقیت آپلود شد');
+              window.location.reload();
+            };
+            input.click();
+          }}
+        >
+          <Plus className="size-4" /> آپلود فایل
+        </Button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {media?.map(m => (

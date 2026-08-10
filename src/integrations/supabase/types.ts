@@ -877,14 +877,21 @@ export type Database = {
           content: string | null
           course_id: string
           created_at: string
+          difficulty: Database["public"]["Enums"]["difficulty"] | null
           duration_seconds: number
+          estimated_time_minutes: number | null
           id: string
           is_free_preview: boolean
+          lesson_type: string | null
           practice_questions: Json | null
+          prerequisites: string[] | null
+          related_lessons: string[] | null
+          rich_content: Json | null
           scheduled_at: string | null
           seo_metadata: Json | null
           slug: string
           sort_order: number
+          status: Database["public"]["Enums"]["course_status"] | null
           subtopic_id: string | null
           summary: string | null
           title: string
@@ -902,14 +909,21 @@ export type Database = {
           content?: string | null
           course_id: string
           created_at?: string
+          difficulty?: Database["public"]["Enums"]["difficulty"] | null
           duration_seconds?: number
+          estimated_time_minutes?: number | null
           id?: string
           is_free_preview?: boolean
+          lesson_type?: string | null
           practice_questions?: Json | null
+          prerequisites?: string[] | null
+          related_lessons?: string[] | null
+          rich_content?: Json | null
           scheduled_at?: string | null
           seo_metadata?: Json | null
           slug: string
           sort_order?: number
+          status?: Database["public"]["Enums"]["course_status"] | null
           subtopic_id?: string | null
           summary?: string | null
           title: string
@@ -927,14 +941,21 @@ export type Database = {
           content?: string | null
           course_id?: string
           created_at?: string
+          difficulty?: Database["public"]["Enums"]["difficulty"] | null
           duration_seconds?: number
+          estimated_time_minutes?: number | null
           id?: string
           is_free_preview?: boolean
+          lesson_type?: string | null
           practice_questions?: Json | null
+          prerequisites?: string[] | null
+          related_lessons?: string[] | null
+          rich_content?: Json | null
           scheduled_at?: string | null
           seo_metadata?: Json | null
           slug?: string
           sort_order?: number
+          status?: Database["public"]["Enums"]["course_status"] | null
           subtopic_id?: string | null
           summary?: string | null
           title?: string
@@ -1670,6 +1691,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_file_usage: {
+        Args: { file_url: string }
+        Returns: {
+          target_id: string
+          target_type: string
+          title: string
+        }[]
+      }
       check_permission: {
         Args: { _action: string; _resource: string; _user_id: string }
         Returns: boolean

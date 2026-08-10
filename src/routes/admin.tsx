@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
-  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search
+  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search, Trash2, CheckCircle2
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -16,8 +16,11 @@ import {
   adminGetExams, adminUpsertExam,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
-  adminGetHomepageSections, adminUpdateHomepageSection
+  adminGetHomepageSections, adminUpdateHomepageSection,
+  adminGetLessons, adminUpsertLesson, adminDeleteLesson
 } from "@/lib/admin.functions";
+import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";

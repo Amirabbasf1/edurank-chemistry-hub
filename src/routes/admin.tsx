@@ -704,7 +704,7 @@ function AdminExams() {
                     return (
                       <div key={qid} className="p-2 border rounded text-[10px] flex items-center justify-between bg-white">
                         <span className="truncate flex-1 font-bold">{idx + 1}. {q?.body}</span>
-                        <Button type="button" size="xs" variant="ghost" className="text-destructive" onClick={() => setSelectedQuestions(selectedQuestions.filter(id => id !== qid))}><Trash2 className="size-3" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => setSelectedQuestions(selectedQuestions.filter(id => id !== qid))}><Trash2 className="size-3" /></Button>
                       </div>
                     );
                   })}

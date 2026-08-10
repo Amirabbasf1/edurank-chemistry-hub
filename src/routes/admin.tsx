@@ -362,10 +362,10 @@ function AdminCurriculum() {
               </div>
             </div>
             
-            <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
-              <Plus className="size-8 mb-4" />
-              <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
-            </div>
+             <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
+               <Plus className="size-8 mb-4" />
+               <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
+             </div>
          </div>
        )}
     </div>

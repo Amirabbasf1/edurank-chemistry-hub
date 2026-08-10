@@ -1288,11 +1288,14 @@ function AdminMedia() {
                 
                 const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
                 await adminAddMediaRecord({
-                  filename: file.name,
-                  file_url: publicUrl,
-                  file_type: file.type,
-                  file_size: file.size
+                  data: {
+                    filename: file.name,
+                    file_url: publicUrl,
+                    file_type: file.type,
+                    file_size: file.size
+                  }
                 });
+
                 
                 queryClient.invalidateQueries({ queryKey: ['admin-media'] });
                 toast.success('فایل با موفقیت آپلود شد', { id: toastId });

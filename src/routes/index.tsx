@@ -117,7 +117,7 @@ function Home() {
         {/* LEVELS */}
         <Section title="پایه تحصیلی خود را انتخاب کنید" subtitle="محتوای هر پایه بر اساس بودجه‌بندی کتاب درسی تنظیم شده است.">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {data.categories.map((c) => (
+            {data.categories.map((c: any) => (
               <Link
                 key={c.id}
                 to="/courses"
@@ -136,7 +136,7 @@ function Home() {
         {/* FEATURED */}
         <Section title="دوره‌های منتخب" subtitle="پرطرفدارترین دوره‌های ادیورَنک" action={{ to: "/courses", label: "همه دوره‌ها" }}>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {data.featured.map((c) => (
+            {data.featured.map((c: any) => (
               <CourseCard key={c.id} course={c} />
             ))}
           </div>
@@ -178,7 +178,7 @@ function Home() {
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <h2 className="text-2xl font-extrabold sm:text-3xl">تجربه دانش‌آموزان</h2>
             <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              {data.testimonials.map((t) => (
+              {data.testimonials.map((t: any) => (
                 <figure key={t.id} className="card-surface p-6">
                   <Quote className="size-6 text-accent" aria-hidden />
                   <blockquote className="mt-3 text-sm leading-8 text-foreground">{t.body}</blockquote>
@@ -200,7 +200,7 @@ function Home() {
         {/* ARTICLES */}
         <Section title="آخرین مقالات" subtitle="دانشنامه شیمی ادیورَنک" action={{ to: "/articles", label: "همه مقالات" }}>
           <div className="grid gap-5 lg:grid-cols-3">
-            {data.articles.map((a) => (
+            {data.articles.map((a: any) => (
               <Link
                 key={a.id}
                 to="/articles/$slug"
@@ -220,7 +220,7 @@ function Home() {
         {/* FAQ */}
         <Section title="سوالات متداول" subtitle="پاسخ پرتکرارترین پرسش‌های شما">
           <Accordion type="single" collapsible className="card-surface px-5">
-            {data.faqs.map((f) => (
+            {data.faqs.map((f: any) => (
               <AccordionItem key={f.id} value={f.id}>
                 <AccordionTrigger className="text-start text-sm font-bold">{f.question}</AccordionTrigger>
                 <AccordionContent className="text-sm leading-8 text-muted-foreground">{f.answer}</AccordionContent>

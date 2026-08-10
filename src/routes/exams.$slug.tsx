@@ -63,7 +63,7 @@ function ExamPage() {
       const payload = {
         examId: exam.id,
         timeSpentSeconds: exam.duration_minutes * 60 - seconds,
-        answers: questions.map((q) => ({ questionId: q.id, optionId: answers[q.id] ?? null })),
+        answers: questions.map((q: any) => ({ questionId: q.id, optionId: answers[q.id] ?? null })),
       };
       const res = await grade({ data: payload });
       setResult(res);
@@ -142,7 +142,7 @@ function ExamPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {questions.map((item, i) => (
+              {questions.map((item: any, i: number) => (
                 <button
                   key={item.id}
                   onClick={() => setCurrent(i)}
@@ -164,7 +164,7 @@ function ExamPage() {
               <p className="text-sm text-muted-foreground">سؤال {toFaDigits(current + 1)}</p>
               <h2 className="mt-3 text-lg font-bold leading-9">{q.body}</h2>
               <ul className="mt-6 space-y-3">
-                {q.question_options.map((o) => (
+                {q.question_options.map((o: any) => (
                   <li key={o.id}>
                     <button
                       onClick={() => setAnswers((a) => ({ ...a, [q.id]: a[q.id] === o.id ? null : o.id }))}
@@ -212,8 +212,8 @@ function ExamPage() {
             </div>
 
             <h2 className="text-xl font-extrabold">پاسخ تشریحی</h2>
-            {questions.map((item, i) => {
-              const detail = result.perQuestion.find((p) => p.questionId === item.id);
+            {questions.map((item: any, i: number) => {
+              const detail = result.perQuestion.find((p: any) => p.questionId === item.id);
               return (
                 <div key={item.id} className="card-surface p-6">
                   <div className="flex items-start gap-2">
@@ -225,7 +225,7 @@ function ExamPage() {
                     <h3 className="font-bold leading-8">{toFaDigits(i + 1)}. {item.body}</h3>
                   </div>
                   <ul className="mt-4 space-y-2 text-sm">
-                    {item.question_options.map((o) => {
+                    {item.question_options.map((o: any) => {
                       const isKey = detail?.correctOptionId === o.id;
                       const chosen = answers[item.id] === o.id;
                       return (

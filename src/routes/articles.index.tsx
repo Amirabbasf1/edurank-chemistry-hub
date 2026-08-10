@@ -30,10 +30,10 @@ function ArticlesPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
 
-  const featured = articles.find((a) => a.is_featured) ?? articles[0];
+  const featured = articles.find((a: any) => a.is_featured) ?? articles[0];
   const list = useMemo(
     () =>
-      articles.filter((a) => {
+      articles.filter((a: any) => {
         const matchQ = q.trim() === "" || `${a.title} ${a.excerpt ?? ""} ${a.tags.join(" ")}`.includes(q.trim());
         return matchQ && (!cat || a.category_id === cat);
       }),
@@ -76,7 +76,7 @@ function ArticlesPage() {
             <Button size="sm" variant={cat === null ? "default" : "outline"} onClick={() => setCat(null)}>
               همه دسته‌ها
             </Button>
-            {categories.map((c) => (
+            {categories.map((c: any) => (
               <Button key={c.id} size="sm" variant={cat === c.id ? "default" : "outline"} onClick={() => setCat(c.id)}>
                 {c.title}
               </Button>
@@ -93,7 +93,7 @@ function ArticlesPage() {
           </div>
         ) : (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((a) => (
+            {list.map((a: any) => (
               <Link
                 key={a.id}
                 to="/articles/$slug"
@@ -103,7 +103,7 @@ function ArticlesPage() {
                 <h2 className="font-bold leading-7 group-hover:text-primary">{a.title}</h2>
                 <p className="mt-2 line-clamp-3 text-sm leading-7 text-muted-foreground">{a.excerpt}</p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
-                  {a.tags.slice(0, 3).map((t) => (
+                  {a.tags.slice(0, 3).map((t: string) => (
                     <Badge key={t} variant="secondary" className="text-[11px]">{t}</Badge>
                   ))}
                 </div>

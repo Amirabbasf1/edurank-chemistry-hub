@@ -59,7 +59,7 @@ function LessonPage() {
   const [note, setNote] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const index = lessons.findIndex((l) => l.id === lesson.id);
+  const index = lessons.findIndex((l: any) => l.id === lesson.id);
   const prev = index > 0 ? lessons[index - 1] : null;
   const next = index < lessons.length - 1 ? lessons[index + 1] : null;
 
@@ -177,14 +177,14 @@ function LessonPage() {
         </div>
         <p className="mt-2 text-xs text-muted-foreground">{faNumber(percent)}٪ تکمیل شده</p>
       </div>
-      {chapters.map((ch) => (
+      {chapters.map((ch: any) => (
         <div key={ch.id}>
           <p className="mb-2 text-xs font-bold text-muted-foreground">{ch.title}</p>
           <ul className="space-y-1">
             {lessons
-              .filter((l) => l.chapter_id === ch.id)
-              .map((l) => {
-                const done = progressRows?.some((p) => p.lesson_id === l.id && p.is_completed);
+              .filter((l: any) => l.chapter_id === ch.id)
+              .map((l: any) => {
+                const done = progressRows?.some((p: any) => p.lesson_id === l.id && p.is_completed);
                 const active = l.id === lesson.id;
                 return (
                   <li key={l.id}>

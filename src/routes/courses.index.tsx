@@ -39,12 +39,12 @@ function CoursesPage() {
   const [sort, setSort] = useState<(typeof SORTS)[number]["key"]>("popular");
 
   const list = useMemo(() => {
-    let out = courses.filter((c) => {
+    let out = courses.filter((c: any) => {
       const matchQ = q.trim() === "" || `${c.title} ${c.short_description ?? ""} ${c.tags.join(" ")}`.includes(q.trim());
       const matchCat = !cat || c.category_id === cat;
       return matchQ && matchCat;
     });
-    out = [...out].sort((a, b) => {
+    out = [...out].sort((a: any, b: any) => {
       if (sort === "newest") return b.created_at.localeCompare(a.created_at);
       if (sort === "rating") return Number(b.rating) - Number(a.rating);
       if (sort === "cheap") return (a.discount_price ?? a.price) - (b.discount_price ?? b.price);
@@ -77,7 +77,7 @@ function CoursesPage() {
             <Button size="sm" variant={cat === null ? "default" : "outline"} onClick={() => setCat(null)}>
               همه پایه‌ها
             </Button>
-            {categories.map((c) => (
+            {categories.map((c: any) => (
               <Button key={c.id} size="sm" variant={cat === c.id ? "default" : "outline"} onClick={() => setCat(c.id)}>
                 {c.title}
               </Button>
@@ -102,7 +102,7 @@ function CoursesPage() {
           </div>
         ) : (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((c) => (
+            {list.map((c: any) => (
               <CourseCard key={c.id} course={c} />
             ))}
           </div>

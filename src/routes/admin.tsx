@@ -767,6 +767,110 @@ function AdminHomepage() {
   );
 }
 
+function AdminLessons() {
+  const queryClient = useQueryClient();
+  const [courseId, setCourseId] = useState("");
+  const { data: courses } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
+  const { data: lessons, isLoading } = useQuery({ 
+    queryKey: ['admin-lessons', courseId], 
+    queryFn: () => adminGetLessons({ data: { courseId } }),
+    enabled: !!courseId 
+  });
+  const [editingLesson, setEditingLesson] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertLesson({ data: { ...data, course_id: courseId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] });
+      setIsDialogOpen(false);
+      toast.success('درس با موفقیت ذخیره شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت دروس</h2>
+        <div className="flex gap-4">
+          <Select onValueChange={setCourseId} value={courseId}>
+            <SelectTrigger className="w-64"><SelectValue placeholder="انتخاب دوره..." /></SelectTrigger>
+            <SelectContent>{courses?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
+          </Select>
+          <Button disabled={!courseId} onClick={() => { setEditingLesson(null); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+            <Plus className="size-4" /> درس جدید
+          </Button>
+        </div>
+      </div>
+      
+      {!courseId ? (
+        <div className="p-20 border-2 border-dashed rounded-2xl text-center text-muted-foreground">دوره ای را انتخاب کنید</div>
+      ) : (
+        <div className="rounded-xl border overflow-hidden">
+          <Table>
+            <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">نوع</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {isLoading ? <TableRow><TableCell colSpan={3} className="text-center">بارگذاری...</TableCell></TableRow> :
+                lessons?.map(l => (
+                  <TableRow key={l.id}>
+                    <TableCell className="font-bold">{l.title}</TableCell>
+                    <TableCell><Badge variant="outline">{l.type}</Badge></TableCell>
+                    <TableCell><Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button></TableCell>
+                  </TableRow>
+                ))
+              }
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle className="font-black text-right">ویرایش درس</DialogTitle></DialogHeader>
+          <form className="space-y-4 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingLesson,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              type: fd.get('type'),
+              content: fd.get('content'),
+              video_url: fd.get('video_url'),
+              is_free_preview: fd.get('is_free') === 'on'
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={editingLesson?.title} required /></div>
+              <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingLesson?.slug} required /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">نوع محتوا</label>
+                <Select name="type" defaultValue={editingLesson?.type || 'video'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">ویدیو</SelectItem>
+                    <SelectItem value="article">نوشتاری</SelectItem>
+                    <SelectItem value="quiz">آزمونک</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><label className="text-xs font-bold">لینک ویدیو (در صورت وجود)</label><Input name="video_url" defaultValue={editingLesson?.video_url} /></div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">محتوای متنی (Rich-text Markdown)</label>
+              <textarea name="content" className="w-full min-h-[200px] border p-3 rounded-lg text-sm" defaultValue={editingLesson?.content} />
+            </div>
+            <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره درس</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function AdminSEO() {
   return (
     <div className="space-y-6 text-right" dir="rtl">
@@ -800,4 +904,5 @@ function AdminSettings() {
     </div>
   );
 }
+
 

@@ -9,7 +9,12 @@ export const adminCreateMediaRecord = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: res, error } = await supabase
       .from("media_library")
-      .insert([data])
+      .insert([{
+        filename: data.filename,
+        file_url: data.file_url,
+        file_type: data.file_type,
+        file_size: data.file_size
+      }])
       .select()
       .single();
     if (error) throw error;

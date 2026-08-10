@@ -30,7 +30,7 @@ export const adminUpdateUserRole = createServerFn({ method: "POST" })
     // Transactional logic: delete old, insert new
     await supabase.from("user_roles").delete().eq("user_id", data.userId);
     const { error } = await supabase.from("user_roles").insert(
-      data.roles.map(r => ({ user_id: data.userId, role: r }))
+      data.roles.map(r => ({ user_id: data.userId, role: r as any }))
     );
     if (error) throw error;
     return { success: true };

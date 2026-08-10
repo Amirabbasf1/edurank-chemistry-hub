@@ -159,17 +159,108 @@ function AdminDashboard() {
 }
 
 function AdminCourses() {
+  const queryClient = useQueryClient();
   const { data: courses, isLoading } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
-  const [isAdding, setIsAdding] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => {
+      if (data.id) return adminUpdateCourse({ data: { id: data.id, updates: data } });
+      return adminCreateCourse({ data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
+      setIsDialogOpen(false);
+      setEditingCourse(null);
+      toast.success('دوره با موفقیت ذخیره شد');
+    }
+  });
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت دوره‌ها</h2>
-        <Button onClick={() => setIsAdding(true)} size="sm" className="font-bold gap-2">
-          <Plus className="size-4" /> افزودن دوره جدید
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingCourse(null)} size="sm" className="font-bold gap-2">
+              <Plus className="size-4" /> افزودن دوره جدید
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">{editingCourse ? 'ویرایش دوره' : 'ایجاد دوره جدید'}</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = Object.fromEntries(formData.entries());
+              mutation.mutate({ 
+                ...editingCourse, 
+                ...data, 
+                price: Number(data['price']), 
+                discount_price: Number(data['discount_price']) 
+              });
+            }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">عنوان دوره</label>
+                  <Input name="title" defaultValue={editingCourse?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">نامک (Slug)</label>
+                  <Input name="slug" defaultValue={editingCourse?.slug} required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">توضیح کوتاه</label>
+                <Input name="short_description" defaultValue={editingCourse?.short_description} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">قیمت (تومان)</label>
+                  <Input name="price" type="number" defaultValue={editingCourse?.price} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">قیمت با تخفیف</label>
+                  <Input name="discount_price" type="number" defaultValue={editingCourse?.discount_price} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">پایه تحصیلی</label>
+                  <Select name="grade" defaultValue={editingCourse?.grade || 'دهم'}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="دهم">دهم</SelectItem>
+                      <SelectItem value="یازدهم">یازدهم</SelectItem>
+                      <SelectItem value="دوازدهم">دوازدهم</SelectItem>
+                      <SelectItem value="کنکور">کنکور</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">وضعیت انتشار</label>
+                  <Select name="status" defaultValue={editingCourse?.status || 'draft'}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">پیش‌نویس</SelectItem>
+                      <SelectItem value="published">منتشر شده</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold" disabled={mutation.isPending}>
+                  {mutation.isPending ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+      {/* Table remains identical... */}
+
 
       <div className="rounded-xl border overflow-hidden">
         <Table>
@@ -184,7 +275,7 @@ function AdminCourses() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-10">درحال بارگذاری...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-xs">درحال بارگذاری...</TableCell></TableRow>
             ) : courses?.map(course => (
               <TableRow key={course.id}>
                 <TableCell className="font-bold">{course.title}</TableCell>
@@ -196,7 +287,10 @@ function AdminCourses() {
                 </TableCell>
                 <TableCell>{faNumber(course.students_count)}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">ویرایش</Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setEditingCourse(course);
+                    setIsDialogOpen(true);
+                  }}>ویرایش</Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -208,38 +302,159 @@ function AdminCourses() {
 }
 
 function AdminCurriculum() {
+  const queryClient = useQueryClient();
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const { data: courses } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
+  const { data: curriculum, isLoading } = useQuery({ 
+    queryKey: ['admin-curriculum', selectedCourse], 
+    queryFn: () => adminGetCurriculum({ data: { courseId: selectedCourse } }),
+    enabled: !!selectedCourse
+  });
+
+  const upsertChapter = useMutation({
+    mutationFn: (data: any) => adminUpsertChapter({ data: { ...data, course_id: selectedCourse } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] });
+      toast.success('فصل با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
-       <h2 className="text-xl font-black">مدیریت سرفصل‌ها</h2>
-       <p className="text-muted-foreground text-sm">ساختار درختی محتوا: پایه {">"} دوره {">"} فصل {">"} موضوع {">"} زیرموضوع {">"} درس</p>
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl border bg-muted/5 flex flex-col items-center justify-center text-center">
-             <GraduationCap className="size-10 text-muted mb-4" />
-             <h3 className="font-bold">انتخاب دوره</h3>
-             <p className="text-xs text-muted-foreground mt-2">ابتدا دوره‌ای را برای مدیریت سرفصل‌های آن انتخاب کنید.</p>
-             <Select>
-                <SelectTrigger className="mt-4 w-full">
-                   <SelectValue placeholder="انتخاب دوره..." />
-                </SelectTrigger>
-                <SelectContent>
-                   <SelectItem value="c1">شیمی دهم</SelectItem>
-                   <SelectItem value="c2">شیمی یازدهم</SelectItem>
-                </SelectContent>
-             </Select>
-          </div>
+       <div className="flex items-center justify-between">
+         <h2 className="text-xl font-black">مدیریت سرفصل‌ها</h2>
+         <div className="w-64">
+           <Select onValueChange={setSelectedCourse} value={selectedCourse}>
+              <SelectTrigger>
+                 <SelectValue placeholder="انتخاب دوره..." />
+              </SelectTrigger>
+              <SelectContent>
+                 {courses?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+              </SelectContent>
+           </Select>
+         </div>
        </div>
+
+       {!selectedCourse ? (
+         <div className="p-20 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/5">
+           <GraduationCap className="size-12 mb-4 opacity-20" />
+           <p>لطفاً یک دوره را برای مدیریت سرفصل‌های آن انتخاب کنید</p>
+         </div>
+       ) : isLoading ? (
+         <div className="py-20 text-center">درحال بارگذاری سرفصل‌ها...</div>
+       ) : (
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold flex items-center gap-2"><BookOpen className="size-4" /> لیست فصل‌ها</h3>
+                <Button size="sm" variant="outline" onClick={() => {
+                  const title = prompt('عنوان فصل جدید:');
+                  if (title) upsertChapter.mutate({ title, sort_order: (curriculum?.chapters?.length || 0) + 1 });
+                }}>افزودن فصل</Button>
+              </div>
+              <div className="space-y-2">
+                {curriculum?.chapters?.map(ch => (
+                  <div key={ch.id} className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                    <span className="font-bold text-sm">{ch.title}</span>
+                    <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
+              <Plus className="size-8 mb-4" />
+              <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
+            </div>
+         </div>
+       )}
     </div>
   );
 }
 
 function AdminQuestions() {
-  const { data: questions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const queryClient = useQueryClient();
+  const { data: questions, isLoading } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertQuestion({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-questions'] });
+      setIsDialogOpen(false);
+      toast.success('سؤال با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">بانک سؤالات</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingQuestion(null)} size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[700px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">طراحی سؤال جدید</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const body = fd.get('body') as string;
+              const difficulty = fd.get('difficulty') as any;
+              mutation.mutate({ 
+                question: { ...editingQuestion, body, difficulty, type: 'multiple_choice', grade: 'دهم' },
+                options: [
+                  { body: fd.get('opt1'), is_correct: true, sort_order: 1 },
+                  { body: fd.get('opt2'), is_correct: false, sort_order: 2 },
+                  { body: fd.get('opt3'), is_correct: false, sort_order: 3 },
+                  { body: fd.get('opt4'), is_correct: false, sort_order: 4 },
+                ]
+              });
+            }}>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">متن سؤال</label>
+                <Input name="body" defaultValue={editingQuestion?.body} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه صحیح (۱)</label>
+                  <Input name="opt1" required placeholder="پاسخ درست را اینجا بنویسید" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۲</label>
+                  <Input name="opt2" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۳</label>
+                  <Input name="opt3" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۴</label>
+                  <Input name="opt4" required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">درجه سختی</label>
+                <Select name="difficulty" defaultValue={editingQuestion?.difficulty || 'medium'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">آسان</SelectItem>
+                    <SelectItem value="medium">متوسط</SelectItem>
+                    <SelectItem value="hard">سخت</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold">ذخیره در بانک سؤالات</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+      
       <div className="rounded-xl border overflow-hidden">
         <Table>
           <TableHeader>
@@ -247,18 +462,18 @@ function AdminQuestions() {
               <TableHead className="text-right">سؤال</TableHead>
               <TableHead className="text-right">سطح</TableHead>
               <TableHead className="text-right">نوع</TableHead>
-              <TableHead className="text-right">منبع</TableHead>
               <TableHead className="text-right">عملیات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {questions?.map(q => (
+            {isLoading ? (
+               <TableRow><TableCell colSpan={4} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
+            ) : questions?.map(q => (
               <TableRow key={q.id}>
-                <TableCell className="max-w-md truncate">{q.body}</TableCell>
-                <TableCell><Badge variant="outline">{q.difficulty}</Badge></TableCell>
-                <TableCell>{q.type}</TableCell>
-                <TableCell>{q.source ?? '-'}</TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell className="max-w-md truncate text-xs font-bold">{q.body}</TableCell>
+                <TableCell><Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge></TableCell>
+                <TableCell className="text-xs">{q.type}</TableCell>
+                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -397,12 +612,78 @@ function AdminExams() {
 }
 
 function AdminArticles() {
-  const { data: articles } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  const queryClient = useQueryClient();
+  const { data: articles, isLoading } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertArticle({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      setIsDialogOpen(false);
+      toast.success('مقاله با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت مقالات</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingArticle(null)} size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[700px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">انتشار مقاله جدید</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              mutation.mutate({ 
+                ...editingArticle, 
+                title: fd.get('title'),
+                slug: fd.get('slug'),
+                excerpt: fd.get('excerpt'),
+                content: fd.get('content'),
+                author_name: 'مدیریت',
+                is_published: fd.get('published') === 'on'
+              });
+            }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">عنوان مقاله</label>
+                  <Input name="title" defaultValue={editingArticle?.title} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">نامک (Slug)</label>
+                  <Input name="slug" defaultValue={editingArticle?.slug} required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">خلاصه مقاله</label>
+                <Input name="excerpt" defaultValue={editingArticle?.excerpt} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">متن محتوا (Markdown)</label>
+                <textarea 
+                  name="content" 
+                  className="w-full min-h-[200px] p-3 rounded-lg border text-sm font-sans" 
+                  defaultValue={editingArticle?.content}
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" name="published" defaultChecked={editingArticle?.is_published} />
+                <label className="text-xs font-bold">انتشار فوری</label>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold">ذخیره و انتشار</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="rounded-xl border overflow-hidden">
         <Table>
@@ -415,12 +696,14 @@ function AdminArticles() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {articles?.map(a => (
+            {isLoading ? (
+               <TableRow><TableCell colSpan={4} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
+            ) : articles?.map(a => (
               <TableRow key={a.id}>
-                <TableCell className="font-bold">{a.title}</TableCell>
-                <TableCell>{a.author_name}</TableCell>
-                <TableCell><Badge>{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell className="font-bold text-xs">{a.title}</TableCell>
+                <TableCell className="text-xs">{a.author_name}</TableCell>
+                <TableCell><Badge className="text-[10px]">{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>

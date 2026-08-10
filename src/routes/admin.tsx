@@ -165,7 +165,10 @@ function AdminCourses() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: (data: any) => data.id ? adminUpdateCourse({ id: data.id, updates: data }) : adminCreateCourse(data),
+    mutationFn: (data: any) => {
+      if (data.id) return adminUpdateCourse({ data: { id: data.id, updates: data } });
+      return adminCreateCourse({ data });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
       setIsDialogOpen(false);
@@ -192,7 +195,12 @@ function AdminCourses() {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               const data = Object.fromEntries(formData.entries());
-              mutation.mutate({ ...editingCourse, ...data, price: Number(data.price), discount_price: Number(data.discount_price) });
+              mutation.mutate({ 
+                ...editingCourse, 
+                ...data, 
+                price: Number(data['price']), 
+                discount_price: Number(data['discount_price']) 
+              });
             }}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -251,6 +259,8 @@ function AdminCourses() {
           </DialogContent>
         </Dialog>
       </div>
+      {/* Table remains identical... */}
+
 
       <div className="rounded-xl border overflow-hidden">
         <Table>

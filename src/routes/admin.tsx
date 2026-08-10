@@ -111,3 +111,378 @@ function AdminLayout() {
     </div>
   );
 }
+
+function AdminContent({ tab }: { tab: string }) {
+  switch (tab) {
+    case 'dashboard': return <AdminDashboard />;
+    case 'users': return <AdminUsers />;
+    case 'courses': return <AdminCourses />;
+    case 'curriculum': return <AdminCurriculum />;
+    case 'questions': return <AdminQuestions />;
+    case 'exams': return <AdminExams />;
+    case 'articles': return <AdminArticles />;
+    case 'media': return <AdminMedia />;
+    case 'homepage': return <AdminHomepage />;
+    case 'seo': return <AdminSEO />;
+    case 'logs': return <AdminLogs />;
+    case 'settings': return <AdminSettings />;
+    default: return <div>بخش در حال توسعه...</div>;
+  }
+}
+
+function AdminDashboard() {
+  return (
+    <div className="space-y-8 text-right" dir="rtl">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          { label: 'کل دوره‌ها', value: '۱۲', color: 'bg-blue-500' },
+          { label: 'دانشجویان فعال', value: '۱,۴۵۰', color: 'bg-green-500' },
+          { label: 'فروش ماهانه', value: '۴۵.۲M', color: 'bg-purple-500' },
+          { label: 'آزمون‌های امروز', value: '۱۲۸', color: 'bg-orange-500' },
+        ].map((stat, idx) => (
+          <div key={idx} className="p-6 rounded-2xl bg-white border shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{stat.label}</p>
+              <h3 className="text-2xl font-black mt-1">{stat.value}</h3>
+            </div>
+            <div className={`size-10 rounded-xl ${stat.color} opacity-20`} />
+          </div>
+        ))}
+      </div>
+      <div className="bg-muted/10 p-12 rounded-2xl border-2 border-dashed border-muted text-center">
+        <Monitor className="size-12 text-muted mx-auto mb-4" />
+        <h3 className="text-lg font-bold">نمای کلی سیستم</h3>
+        <p className="text-muted-foreground text-sm mt-2">نمودارهای تحلیلی و آماری در این بخش قرار می‌گیرند.</p>
+      </div>
+    </div>
+  );
+}
+
+function AdminCourses() {
+  const { data: courses, isLoading } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
+  const [isAdding, setIsAdding] = useState(false);
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت دوره‌ها</h2>
+        <Button onClick={() => setIsAdding(true)} size="sm" className="font-bold gap-2">
+          <Plus className="size-4" /> افزودن دوره جدید
+        </Button>
+      </div>
+
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">عنوان دوره</TableHead>
+              <TableHead className="text-right">قیمت</TableHead>
+              <TableHead className="text-right">وضعیت</TableHead>
+              <TableHead className="text-right">دانشجو</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-10">درحال بارگذاری...</TableCell></TableRow>
+            ) : courses?.map(course => (
+              <TableRow key={course.id}>
+                <TableCell className="font-bold">{course.title}</TableCell>
+                <TableCell>{faPrice(course.price)}</TableCell>
+                <TableCell>
+                  <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>
+                    {course.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{faNumber(course.students_count)}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm">ویرایش</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminCurriculum() {
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+       <h2 className="text-xl font-black">مدیریت سرفصل‌ها</h2>
+       <p className="text-muted-foreground text-sm">ساختار درختی محتوا: پایه {">"} دوره {">"} فصل {">"} موضوع {">"} زیرموضوع {">"} درس</p>
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl border bg-muted/5 flex flex-col items-center justify-center text-center">
+             <GraduationCap className="size-10 text-muted mb-4" />
+             <h3 className="font-bold">انتخاب دوره</h3>
+             <p className="text-xs text-muted-foreground mt-2">ابتدا دوره‌ای را برای مدیریت سرفصل‌های آن انتخاب کنید.</p>
+             <Select>
+                <SelectTrigger className="mt-4 w-full">
+                   <SelectValue placeholder="انتخاب دوره..." />
+                </SelectTrigger>
+                <SelectContent>
+                   <SelectItem value="c1">شیمی دهم</SelectItem>
+                   <SelectItem value="c2">شیمی یازدهم</SelectItem>
+                </SelectContent>
+             </Select>
+          </div>
+       </div>
+    </div>
+  );
+}
+
+function AdminQuestions() {
+  const { data: questions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">بانک سؤالات</h2>
+        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+      </div>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">سؤال</TableHead>
+              <TableHead className="text-right">سطح</TableHead>
+              <TableHead className="text-right">نوع</TableHead>
+              <TableHead className="text-right">منبع</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {questions?.map(q => (
+              <TableRow key={q.id}>
+                <TableCell className="max-w-md truncate">{q.body}</TableCell>
+                <TableCell><Badge variant="outline">{q.difficulty}</Badge></TableCell>
+                <TableCell>{q.type}</TableCell>
+                <TableCell>{q.source ?? '-'}</TableCell>
+                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminMedia() {
+  const { data: media } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
+        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آپلود فایل</Button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {media?.map(m => (
+          <div key={m.id} className="group relative aspect-square rounded-xl border bg-muted/20 overflow-hidden hover:shadow-md transition-all">
+            {m.file_type.startsWith('image') ? (
+               <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
+            ) : (
+               <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon className="size-8" /></div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[10px] text-white truncate">{m.filename}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminUsers() {
+  const { data: users } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت کاربران</h2>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">نام کامل</TableHead>
+              <TableHead className="text-right">نقش‌ها</TableHead>
+              <TableHead className="text-right">امتیاز (XP)</TableHead>
+              <TableHead className="text-right">آخرین فعالیت</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users?.map(u => (
+              <TableRow key={u.id}>
+                <TableCell className="font-bold">{u.full_name}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {u.user_roles.map(r => <Badge key={r.role} variant="secondary">{r.role}</Badge>)}
+                  </div>
+                </TableCell>
+                <TableCell>{faNumber(u.xp)}</TableCell>
+                <TableCell>{faDate(u.last_active_date)}</TableCell>
+                <TableCell><Button variant="ghost" size="sm">مدیریت</Button></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminLogs() {
+  const { data: logs } = useQuery({ queryKey: ['admin-logs'], queryFn: adminGetAuditLogs });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">گزارشات امنیت و تغییرات</h2>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">زمان</TableHead>
+              <TableHead className="text-right">کاربر</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+              <TableHead className="text-right">هدف</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs?.map(log => (
+              <TableRow key={log.id}>
+                <TableCell className="text-xs text-muted-foreground">{faDate(log.created_at)}</TableCell>
+                <TableCell className="font-bold text-xs">{log.profiles?.full_name ?? 'سیستم'}</TableCell>
+                <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
+                <TableCell className="text-xs">{log.target_type} ({log.target_id})</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminExams() {
+  const { data: exams } = useQuery({ queryKey: ['admin-exams'], queryFn: adminGetExams });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت آزمون‌ها</h2>
+        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آزمون جدید</Button>
+      </div>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">عنوان</TableHead>
+              <TableHead className="text-right">مدت زمان</TableHead>
+              <TableHead className="text-right">وضعیت</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {exams?.map(e => (
+              <TableRow key={e.id}>
+                <TableCell className="font-bold">{e.title}</TableCell>
+                <TableCell>{faNumber(e.duration_minutes)} دقیقه</TableCell>
+                <TableCell><Badge>{e.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminArticles() {
+  const { data: articles } = useQuery({ queryKey: ['admin-articles'], queryFn: adminGetArticles });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت مقالات</h2>
+        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> مقاله جدید</Button>
+      </div>
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-right">عنوان</TableHead>
+              <TableHead className="text-right">نویسنده</TableHead>
+              <TableHead className="text-right">وضعیت</TableHead>
+              <TableHead className="text-right">عملیات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {articles?.map(a => (
+              <TableRow key={a.id}>
+                <TableCell className="font-bold">{a.title}</TableCell>
+                <TableCell>{a.author_name}</TableCell>
+                <TableCell><Badge>{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminHomepage() {
+  const { data: sections } = useQuery({ queryKey: ['admin-homepage'], queryFn: adminGetHomepageSections });
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت صفحه اصلی</h2>
+      <div className="grid gap-4">
+        {sections?.map(s => (
+          <div key={s.id} className="p-6 rounded-2xl border flex items-center justify-between hover:bg-muted/5 transition-colors">
+            <div>
+              <h3 className="font-bold">{s.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{s.section_slug}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={s.is_active ? 'default' : 'secondary'}>{s.is_active ? 'فعال' : 'غیرفعال'}</Badge>
+              <Button variant="outline" size="sm">ویرایش محتوا</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminSEO() {
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت سئو (SEO)</h2>
+      <div className="bg-muted/10 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
+        ابزارهای مدیریت متادیتا، سایت‌مپ و بهینه‌سازی موتورهای جستجو در این بخش قرار می‌گیرند.
+      </div>
+    </div>
+  );
+}
+
+function AdminSettings() {
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">تنظیمات سیستم</h2>
+      <div className="grid gap-6">
+        <div className="p-6 rounded-2xl border space-y-4">
+           <h3 className="font-bold border-b pb-2">تنظیمات عمومی</h3>
+           <div className="grid gap-4 max-w-md">
+              <div className="space-y-2">
+                 <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
+                 <Input defaultValue="ادیورَنک" />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
+                 <Input defaultValue="support@edurank.ir" />
+              </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}

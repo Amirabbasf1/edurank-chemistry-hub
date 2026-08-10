@@ -1255,7 +1255,87 @@ function AdminSEO() {
 }
 
 
+function AdminMedia() {
+  const queryClient = useQueryClient();
+  const { data: media, isLoading } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeleteMedia({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+      toast.success('فایل حذف شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
+        <Button 
+          size="sm" 
+          className="font-bold gap-2"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e: any) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              
+              const toastId = toast.loading('در حال آپلود...');
+              try {
+                const filePath = `${Math.random()}-${file.name}`;
+                const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                if (uploadError) throw uploadError;
+                
+                const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
+                await adminAddMediaRecord({
+                  data: {
+                    filename: file.name,
+                    file_url: publicUrl,
+                    file_type: file.type,
+                    file_size: file.size
+                  }
+                });
+
+                queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+                toast.success('فایل با موفقیت آپلود شد', { id: toastId });
+              } catch (err: any) {
+                toast.error(err.message || 'خطا در آپلود', { id: toastId });
+              }
+            };
+            input.click();
+          }}
+        >
+          <Plus className="size-4" /> آپلود رسانه
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {isLoading ? <div>در حال بارگذاری...</div> :
+          media?.map(m => (
+            <div key={m.id} className="group relative aspect-square rounded-xl border overflow-hidden bg-muted/20">
+              {m.file_type.startsWith('image/') ? (
+                <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                  <ImageIcon className="size-8 text-muted-foreground mb-2" />
+                  <span className="text-[10px] font-bold text-center line-clamp-2">{m.filename}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button size="icon" variant="ghost" className="text-white" onClick={() => window.open(m.file_url, '_blank')}><Eye className="size-4" /></Button>
+                <Button size="icon" variant="ghost" className="text-destructive" onClick={() => { if(confirm('حذف شود؟')) deleteMutation.mutate(m.id) }}><Trash2 className="size-4" /></Button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
 function AdminSettings() {
+
   return (
     <div className="space-y-8 text-right" dir="rtl">
       <h2 className="text-xl font-black">تنظیمات پلتفرم</h2>

@@ -18,7 +18,7 @@ const NAV = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, isStaff, signOut } = useAuth();
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -58,6 +58,13 @@ export function SiteHeader() {
           </Link>
           {user ? (
             <>
+              {isStaff && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm" className="text-primary font-bold">
+                    پنل مدیریت
+                  </Button>
+                </Link>
+              )}
               <Link to="/dashboard">
                 <Button variant="secondary" size="sm">
                   <LayoutDashboard className="size-4" /> داشبورد

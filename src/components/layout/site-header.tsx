@@ -18,7 +18,7 @@ const NAV = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, isStaff, signOut } = useAuth();
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -58,6 +58,13 @@ export function SiteHeader() {
           </Link>
           {user ? (
             <>
+              {isStaff && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm" className="text-primary font-bold">
+                    پنل مدیریت
+                  </Button>
+                </Link>
+              )}
               <Link to="/dashboard">
                 <Button variant="secondary" size="sm">
                   <LayoutDashboard className="size-4" /> داشبورد
@@ -108,6 +115,11 @@ export function SiteHeader() {
             <div className="mt-2 grid gap-2">
               {user ? (
                 <>
+                  {isStaff && (
+                    <Link to="/admin" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full border-primary text-primary">پنل مدیریت</Button>
+                    </Link>
+                  )}
                   <Link to="/dashboard" onClick={() => setOpen(false)}>
                     <Button variant="secondary" className="w-full">داشبورد من</Button>
                   </Link>

@@ -302,38 +302,159 @@ function AdminCourses() {
 }
 
 function AdminCurriculum() {
+  const queryClient = useQueryClient();
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const { data: courses } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
+  const { data: curriculum, isLoading } = useQuery({ 
+    queryKey: ['admin-curriculum', selectedCourse], 
+    queryFn: () => adminGetCurriculum({ data: { courseId: selectedCourse } }),
+    enabled: !!selectedCourse
+  });
+
+  const upsertChapter = useMutation({
+    mutationFn: (data: any) => adminUpsertChapter({ data: { ...data, course_id: selectedCourse } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] });
+      toast.success('فصل با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
-       <h2 className="text-xl font-black">مدیریت سرفصل‌ها</h2>
-       <p className="text-muted-foreground text-sm">ساختار درختی محتوا: پایه {">"} دوره {">"} فصل {">"} موضوع {">"} زیرموضوع {">"} درس</p>
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl border bg-muted/5 flex flex-col items-center justify-center text-center">
-             <GraduationCap className="size-10 text-muted mb-4" />
-             <h3 className="font-bold">انتخاب دوره</h3>
-             <p className="text-xs text-muted-foreground mt-2">ابتدا دوره‌ای را برای مدیریت سرفصل‌های آن انتخاب کنید.</p>
-             <Select>
-                <SelectTrigger className="mt-4 w-full">
-                   <SelectValue placeholder="انتخاب دوره..." />
-                </SelectTrigger>
-                <SelectContent>
-                   <SelectItem value="c1">شیمی دهم</SelectItem>
-                   <SelectItem value="c2">شیمی یازدهم</SelectItem>
-                </SelectContent>
-             </Select>
-          </div>
+       <div className="flex items-center justify-between">
+         <h2 className="text-xl font-black">مدیریت سرفصل‌ها</h2>
+         <div className="w-64">
+           <Select onValueChange={setSelectedCourse} value={selectedCourse}>
+              <SelectTrigger>
+                 <SelectValue placeholder="انتخاب دوره..." />
+              </SelectTrigger>
+              <SelectContent>
+                 {courses?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+              </SelectContent>
+           </Select>
+         </div>
        </div>
+
+       {!selectedCourse ? (
+         <div className="p-20 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/5">
+           <GraduationCap className="size-12 mb-4 opacity-20" />
+           <p>لطفاً یک دوره را برای مدیریت سرفصل‌های آن انتخاب کنید</p>
+         </div>
+       ) : isLoading ? (
+         <div className="py-20 text-center">درحال بارگذاری سرفصل‌ها...</div>
+       ) : (
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold flex items-center gap-2"><BookOpen className="size-4" /> لیست فصل‌ها</h3>
+                <Button size="xs" variant="outline" onClick={() => {
+                  const title = prompt('عنوان فصل جدید:');
+                  if (title) upsertChapter.mutate({ title, sort_order: (curriculum?.chapters?.length || 0) + 1 });
+                }}>افزودن فصل</Button>
+              </div>
+              <div className="space-y-2">
+                {curriculum?.chapters?.map(ch => (
+                  <div key={ch.id} className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                    <span className="font-bold text-sm">{ch.title}</span>
+                    <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
+              <Plus className="size-8 mb-4" />
+              <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
+            </div>
+         </div>
+       )}
     </div>
   );
 }
 
 function AdminQuestions() {
-  const { data: questions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const queryClient = useQueryClient();
+  const { data: questions, isLoading } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertQuestion({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-questions'] });
+      setIsDialogOpen(false);
+      toast.success('سؤال با موفقیت ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">بانک سؤالات</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingQuestion(null)} size="sm" className="font-bold gap-2"><Plus className="size-4" /> افزودن سؤال</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[700px]" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-right font-black">طراحی سؤال جدید</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-4 py-4" onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const body = fd.get('body') as string;
+              const difficulty = fd.get('difficulty') as any;
+              mutation.mutate({ 
+                question: { ...editingQuestion, body, difficulty, type: 'multiple_choice', grade: 'دهم' },
+                options: [
+                  { body: fd.get('opt1'), is_correct: true, sort_order: 1 },
+                  { body: fd.get('opt2'), is_correct: false, sort_order: 2 },
+                  { body: fd.get('opt3'), is_correct: false, sort_order: 3 },
+                  { body: fd.get('opt4'), is_correct: false, sort_order: 4 },
+                ]
+              });
+            }}>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">متن سؤال</label>
+                <Input name="body" defaultValue={editingQuestion?.body} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه صحیح (۱)</label>
+                  <Input name="opt1" required placeholder="پاسخ درست را اینجا بنویسید" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۲</label>
+                  <Input name="opt2" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۳</label>
+                  <Input name="opt3" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">گزینه ۴</label>
+                  <Input name="opt4" required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">درجه سختی</label>
+                <Select name="difficulty" defaultValue={editingQuestion?.difficulty || 'medium'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">آسان</SelectItem>
+                    <SelectItem value="medium">متوسط</SelectItem>
+                    <SelectItem value="hard">سخت</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" className="w-full font-bold">ذخیره در بانک سؤالات</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+      
       <div className="rounded-xl border overflow-hidden">
         <Table>
           <TableHeader>
@@ -341,18 +462,18 @@ function AdminQuestions() {
               <TableHead className="text-right">سؤال</TableHead>
               <TableHead className="text-right">سطح</TableHead>
               <TableHead className="text-right">نوع</TableHead>
-              <TableHead className="text-right">منبع</TableHead>
               <TableHead className="text-right">عملیات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {questions?.map(q => (
+            {isLoading ? (
+               <TableRow><TableCell colSpan={4} className="text-center py-10 text-xs">در حال بارگذاری...</TableCell></TableRow>
+            ) : questions?.map(q => (
               <TableRow key={q.id}>
-                <TableCell className="max-w-md truncate">{q.body}</TableCell>
-                <TableCell><Badge variant="outline">{q.difficulty}</Badge></TableCell>
-                <TableCell>{q.type}</TableCell>
-                <TableCell>{q.source ?? '-'}</TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell className="max-w-md truncate text-xs font-bold">{q.body}</TableCell>
+                <TableCell><Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge></TableCell>
+                <TableCell className="text-xs">{q.type}</TableCell>
+                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>

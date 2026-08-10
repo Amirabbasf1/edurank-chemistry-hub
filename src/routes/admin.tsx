@@ -1286,7 +1286,7 @@ function AdminMedia() {
                 if (uploadError) throw uploadError;
                 
                 const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
-                await adminCreateMediaRecord({
+                await adminAddMediaRecord({
                   filename: file.name,
                   file_url: publicUrl,
                   file_type: file.type,

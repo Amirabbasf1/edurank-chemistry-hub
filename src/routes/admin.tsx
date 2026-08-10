@@ -43,6 +43,7 @@ const navItems = [
   { id: 'users', label: 'کاربران', icon: Users },
   { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
   { id: 'curriculum', label: 'سرفصل‌ها', icon: GraduationCap },
+  { id: 'lessons', label: 'دروس', icon: BookOpen },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
   { id: 'exams', label: 'آزمون‌ها', icon: Package },
   { id: 'articles', label: 'مقالات', icon: FileText },

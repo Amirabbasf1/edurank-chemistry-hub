@@ -28,7 +28,6 @@ export const submitExam = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => submitSchema.parse(data))
   .handler(async ({ data, context }): Promise<ExamResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const supabase = context.supabase;
     const userId = context.userId;
 
     const questionIds = data.answers.map((a) => a.questionId);
@@ -60,14 +59,10 @@ export const submitExam = createServerFn({ method: "POST" })
       } else {
         wrongCount += 1;
         if (userId && answer.questionId) {
-          // Add to mistake notebook using admin client to bypass RLS if needed, 
-          // but better to use the user's supabase client if policies allow.
-          // Using admin here to ensure the notebook entry is created reliably.
           await supabaseAdmin.from("mistake_notebook").upsert({
             user_id: userId,
             question_id: answer.questionId,
-            review_count: 0,
-          }, { onConflict: "user_id,question_id" });
+          } as any, { onConflict: "user_id,question_id" });
 
           if ((question as any)?.topic_id) {
             incorrectTopicIds.push((question as any).topic_id);
@@ -77,18 +72,18 @@ export const submitExam = createServerFn({ method: "POST" })
       perQuestion.push({ questionId: answer.questionId, correctOptionId: correct?.id ?? null, isCorrect });
     }
 
-    // Record exam attempt
     if (userId) {
-      await supabaseAdmin.from("exams_attempts").insert({
+      await supabaseAdmin.from("exam_attempts").insert({
         user_id: userId,
         exam_id: data.examId,
         score,
         max_score: maxScore,
+        correct_count: correctCount,
+        wrong_count: wrongCount,
+        unanswered_count: unansweredCount,
         time_spent_seconds: data.timeSpentSeconds,
-        details: { perQuestion } as any,
-      });
+      } as any);
 
-      // Update mastery for incorrect topics
       if (incorrectTopicIds.length > 0) {
         for (const tid of [...new Set(incorrectTopicIds)]) {
           const { data: currentMastery } = await supabaseAdmin
@@ -103,8 +98,7 @@ export const submitExam = createServerFn({ method: "POST" })
             user_id: userId,
             topic_id: tid,
             mastery_score: newScore,
-            last_tested_at: new Date().toISOString(),
-          }, { onConflict: "user_id,topic_id" });
+          } as any, { onConflict: "user_id,topic_id" });
         }
       }
     }

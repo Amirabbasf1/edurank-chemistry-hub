@@ -1309,9 +1309,6 @@ function AdminMedia() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-media'] });
       toast.success('فایل حذف شد');
-    },
-    onError: (err: any) => {
-      toast.error(err.message || 'خطا در حذف فایل');
     }
   });
 
@@ -1331,21 +1328,12 @@ function AdminMedia() {
               
               const toastId = toast.loading('در حال آپلود...');
               try {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Math.random()}.${fileExt}`;
-                const filePath = `${fileName}`;
-                
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                  .from('media')
-                  .upload(filePath, file);
-                  
+                const filePath = `${Math.random()}-${file.name}`;
+                const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
                 if (uploadError) throw uploadError;
                 
-                const { data: { publicUrl } } = supabase.storage
-                  .from('media')
-                  .getPublicUrl(filePath);
-                  
-                await adminCreateMediaRecord({
+                const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
+                await adminAddMediaRecord({
                   filename: file.name,
                   file_url: publicUrl,
                   file_type: file.type,
@@ -1420,6 +1408,7 @@ function AdminSettings() {
     </div>
   );
 }
+
 
 
 

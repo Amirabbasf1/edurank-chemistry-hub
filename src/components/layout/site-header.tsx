@@ -9,6 +9,8 @@ const NAV = [
   { to: "/courses", label: "دوره‌ها" },
   { to: "/exams", label: "آزمون‌ها" },
   { to: "/articles", label: "مقالات" },
+  { to: "/periodic-table", label: "جدول تناوبی" },
+  { to: "/tools", label: "ابزارها" },
   { to: "/about", label: "درباره ما" },
   { to: "/contact", label: "تماس" },
 ] as const;

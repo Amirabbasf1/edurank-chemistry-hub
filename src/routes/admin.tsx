@@ -610,38 +610,127 @@ function AdminLogs() {
 }
 
 function AdminExams() {
+  const queryClient = useQueryClient();
   const { data: exams } = useQuery({ queryKey: ['admin-exams'], queryFn: adminGetExams });
+  const { data: allQuestions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const [editingExam, setEditingExam] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [searchQ, setSearchQ] = useState("");
+
+  const filteredQuestions = useMemo(() => {
+    if (!allQuestions) return [];
+    return allQuestions.filter(q => q.body.includes(searchQ) && !selectedQuestions.includes(q.id));
+  }, [allQuestions, searchQ, selectedQuestions]);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertExam({ data: { exam: data, questionIds: selectedQuestions } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-exams'] });
+      setIsDialogOpen(false);
+      toast.success('آزمون ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت آزمون‌ها</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آزمون جدید</Button>
+        <Button onClick={() => { setEditingExam(null); setSelectedQuestions([]); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+          <Plus className="size-4" /> آزمون جدید
+        </Button>
       </div>
+
       <div className="rounded-xl border overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="text-right">عنوان</TableHead>
-              <TableHead className="text-right">مدت زمان</TableHead>
-              <TableHead className="text-right">وضعیت</TableHead>
-              <TableHead className="text-right">عملیات</TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">مدت</TableHead><TableHead className="text-right">وضعیت</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
           <TableBody>
             {exams?.map(e => (
               <TableRow key={e.id}>
                 <TableCell className="font-bold">{e.title}</TableCell>
                 <TableCell>{faNumber(e.duration_minutes)} دقیقه</TableCell>
                 <TableCell><Badge>{e.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell><Button variant="ghost" size="sm" onClick={() => {
+                  setEditingExam(e);
+                  // In real app, load existing question IDs
+                  setSelectedQuestions([]); 
+                  setIsDialogOpen(true);
+                }}>ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle className="font-black text-right">طراحی آزمون</DialogTitle></DialogHeader>
+          <form className="space-y-6 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingExam,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              duration_minutes: Number(fd.get('duration')),
+              is_published: fd.get('published') === 'on'
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><label className="text-xs font-bold">عنوان آزمون</label><Input name="title" defaultValue={editingExam?.title} required /></div>
+              <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingExam?.slug} required /></div>
+            </div>
+            
+            <div className="space-y-4 border p-4 rounded-xl bg-muted/5">
+              <h3 className="font-black text-sm flex items-center gap-2"><ClipboardList className="size-4" /> انتخاب سؤالات</h3>
+              <div className="flex gap-2">
+                <Input placeholder="جستجو در بانک سؤالات..." value={searchQ} onChange={e => setSearchQ(e.target.value)} className="text-xs" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 h-[300px]">
+                <div className="border rounded-lg p-2 overflow-y-auto space-y-2 bg-white">
+                  <p className="text-[10px] font-bold text-muted-foreground mb-2">سؤالات موجود</p>
+                  {filteredQuestions.map(q => (
+                    <div key={q.id} className="p-2 border rounded text-[10px] flex items-center justify-between hover:bg-muted/50">
+                      <span className="truncate flex-1">{q.body}</span>
+                      <Button type="button" size="xs" variant="ghost" onClick={() => setSelectedQuestions([...selectedQuestions, q.id])}><Plus className="size-3" /></Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="border rounded-lg p-2 overflow-y-auto space-y-2 bg-primary/5 border-primary/20">
+                  <p className="text-[10px] font-bold text-primary mb-2">سؤالات انتخاب شده ({selectedQuestions.length})</p>
+                  {selectedQuestions.map((qid, idx) => {
+                    const q = allQuestions?.find(x => x.id === qid);
+                    return (
+                      <div key={qid} className="p-2 border rounded text-[10px] flex items-center justify-between bg-white">
+                        <span className="truncate flex-1 font-bold">{idx + 1}. {q?.body}</span>
+                        <Button type="button" size="xs" variant="ghost" className="text-destructive" onClick={() => setSelectedQuestions(selectedQuestions.filter(id => id !== qid))}><Trash2 className="size-3" /></Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+               <div className="flex-1 space-y-2">
+                 <label className="text-xs font-bold">مدت زمان (دقیقه)</label>
+                 <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+               </div>
+               <div className="flex items-center gap-2 mt-6">
+                 <input type="checkbox" name="published" defaultChecked={editingExam?.is_published} />
+                 <label className="text-xs font-bold">انتشار عمومی</label>
+               </div>
+            </div>
+            
+            <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره نهایی آزمون</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function AdminArticles() {
   const queryClient = useQueryClient();

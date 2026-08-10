@@ -51,8 +51,30 @@ export const Route = createFileRoute("/courses/$slug/")({
   ),
 });
 
+function LessonItem({ lesson: l, courseSlug }: { lesson: any; courseSlug: string }) {
+  return (
+    <li>
+      <Link
+        to="/courses/$slug/lessons/$lessonSlug"
+        params={{ slug: courseSlug, lessonSlug: l.slug }}
+        className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs hover:bg-secondary transition-colors"
+      >
+        <span className="inline-flex items-center gap-2">
+          {l.is_free_preview ? (
+            <PlayCircle className="size-3.5 text-success" />
+          ) : (
+            <Lock className="size-3.5 text-muted-foreground" />
+          )}
+          {l.title}
+        </span>
+        <span className="text-[10px] text-muted-foreground">{faDuration(l.duration_seconds)}</span>
+      </Link>
+    </li>
+  );
+}
+
 function CoursePage() {
-  const { course, chapters, lessons, related } = Route.useLoaderData();
+  const { course, chapters, topics, subtopics, lessons, related } = Route.useLoaderData();
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -196,37 +218,66 @@ function CoursePage() {
               <h2 className="text-xl font-extrabold">سرفصل‌های دوره</h2>
               <Accordion type="multiple" className="card-surface mt-4 px-5">
                 {chapters.map((ch: any) => {
-                  const items = lessons.filter((l: any) => l.chapter_id === ch.id);
+                  const chTopics = (topics || []).filter((t: any) => t.chapter_id === ch.id);
+                  const chLessons = lessons.filter((l: any) => l.chapter_id === ch.id && !l.topic_id);
+                  
                   return (
                     <AccordionItem key={ch.id} value={ch.id}>
                       <AccordionTrigger className="text-start text-sm font-bold">
                         {ch.title}
                         <span className="ms-2 text-xs font-normal text-muted-foreground">
-                          ({faNumber(items.length)} درس)
+                          ({faNumber(lessons.filter((l: any) => l.chapter_id === ch.id).length)} درس)
                         </span>
                       </AccordionTrigger>
-                      <AccordionContent>
-                        <ul className="space-y-1">
-                          {items.map((l: any) => (
-                            <li key={l.id}>
-                              <Link
-                                to="/courses/$slug/lessons/$lessonSlug"
-                                params={{ slug: course.slug, lessonSlug: l.slug }}
-                                className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-secondary"
-                              >
-                                <span className="inline-flex items-center gap-2">
-                                  {l.is_free_preview ? (
-                                    <PlayCircle className="size-4 text-success" />
-                                  ) : (
-                                    <Lock className="size-4 text-muted-foreground" />
-                                  )}
-                                  {l.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground">{faDuration(l.duration_seconds)}</span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
+                      <AccordionContent className="space-y-4 pt-2">
+                        {/* Lessons directly under Chapter */}
+                        {chLessons.length > 0 && (
+                          <ul className="space-y-1">
+                            {chLessons.map((l: any) => (
+                              <LessonItem key={l.id} lesson={l} courseSlug={course.slug} />
+                            ))}
+                          </ul>
+                        )}
+
+                        {/* Topics under Chapter */}
+                        {chTopics.map((topic: any) => {
+                          const topicSubs = (subtopics || []).filter((s: any) => s.topic_id === topic.id);
+                          const topicLessons = lessons.filter((l: any) => l.topic_id === topic.id && !l.subtopic_id);
+                          
+                          return (
+                            <div key={topic.id} className="mr-2 border-r pr-4 py-2">
+                              <h4 className="text-xs font-black text-primary mb-2 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                {topic.title}
+                              </h4>
+                              
+                              {/* Lessons directly under Topic */}
+                              {topicLessons.length > 0 && (
+                                <ul className="space-y-1 mb-3">
+                                  {topicLessons.map((l: any) => (
+                                    <LessonItem key={l.id} lesson={l} courseSlug={course.slug} />
+                                  ))}
+                                </ul>
+                              )}
+
+                              {/* Subtopics under Topic */}
+                              {topicSubs.map((sub: any) => {
+                                const subLessons = lessons.filter((l: any) => l.subtopic_id === sub.id);
+                                if (subLessons.length === 0) return null;
+                                return (
+                                  <div key={sub.id} className="mr-4 border-r pr-3 mb-2">
+                                    <h5 className="text-[11px] font-bold text-muted-foreground mb-1">{sub.title}</h5>
+                                    <ul className="space-y-1">
+                                      {subLessons.map((l: any) => (
+                                        <LessonItem key={l.id} lesson={l} courseSlug={course.slug} />
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
                       </AccordionContent>
                     </AccordionItem>
                   );

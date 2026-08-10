@@ -346,8 +346,8 @@ function AdminCurriculum() {
          </div>
        ) : isLoading ? (
          <div className="py-20 text-center">درحال بارگذاری سرفصل‌ها...</div>
-       ) : (
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold flex items-center gap-2"><BookOpen className="size-4" /> لیست فصل‌ها</h3>
@@ -356,27 +356,65 @@ function AdminCurriculum() {
                   if (title) upsertChapter.mutate({ title, sort_order: (curriculum?.chapters?.length || 0) + 1 });
                 }}>افزودن فصل</Button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {curriculum?.chapters?.map(ch => (
-                  <div key={ch.id} className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
-                    <span className="font-bold text-sm">{ch.title}</span>
-                    <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
+                  <div key={ch.id} className="space-y-2">
+                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                      <span className="font-bold text-sm">{ch.title}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
+                        <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => {
+                          const title = prompt('عنوان موضوع جدید:');
+                          if (title) adminUpsertTopic({ data: { title, chapter_id: ch.id, sort_order: (curriculum?.topics?.filter(t => t.chapter_id === ch.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                        }}>+ موضوع</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="mr-6 space-y-2 border-r pr-4">
+                      {curriculum?.topics?.filter(t => t.chapter_id === ch.id).map(topic => (
+                        <div key={topic.id} className="space-y-2">
+                          <div className="p-3 rounded-lg border bg-muted/30 flex items-center justify-between text-xs">
+                            <span className="font-bold">{topic.title}</span>
+                            <Button size="sm" variant="ghost" className="h-6 text-[9px]" onClick={() => {
+                              const title = prompt('عنوان زیرمجموعه جدید:');
+                              if (title) adminUpsertSubtopic({ data: { title, topic_id: topic.id, slug: title.toLowerCase().replace(/ /g, '-'), sort_order: (curriculum?.subtopics?.filter(s => s.topic_id === topic.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                            }}>+ زیرمجموعه</Button>
+                          </div>
+                          
+                          <div className="mr-4 space-y-1 border-r pr-3">
+                            {curriculum?.subtopics?.filter(s => s.topic_id === topic.id).map(sub => (
+                              <div key={sub.id} className="p-2 rounded border bg-white flex items-center justify-between text-[10px]">
+                                <span>{sub.title}</span>
+                                <div className="flex items-center gap-1">
+                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive" onClick={() => {
+                                    if (confirm('حذف شود؟')) adminDeleteSubtopic({ data: { id: sub.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                                  }}><Trash2 className="size-3" /></Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
             
-             <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20">
-               <h3 className="font-bold text-primary mb-2">مدیریت سلسله‌مراتب</h3>
-               <p className="text-xs">در این بخش می‌توانید موضوعات و زیرمجموعه‌ها را مدیریت کنید.</p>
-               <div className="flex gap-2 mt-4">
-                 <Button size="sm" variant="outline" onClick={() => {
-                   const title = prompt('عنوان موضوع جدید:');
-                   if (title) adminUpsertTopic({ data: { title, sort_order: (curriculum?.topics?.length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
-                 }}>افزودن موضوع</Button>
-               </div>
-             </div>
-         </div>
+            <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20 sticky top-4 h-fit">
+              <GraduationCap className="size-12 mb-4 text-primary opacity-20" />
+              <h3 className="font-bold text-primary mb-2">راهنمای سلسله‌مراتب</h3>
+              <p className="text-xs leading-6">
+                شما می‌توانید سرفصل‌های دوره را در ۴ سطح مدیریت کنید:<br/>
+                فصل (Chapter) ← موضوع (Topic) ← زیرمجموعه (Subtopic) ← درس (Lesson)
+              </p>
+              <div className="mt-6 p-4 bg-muted/50 rounded-xl text-[10px] text-right w-full">
+                <div className="flex items-center gap-2 mb-2"><div className="w-2 h-2 rounded-full bg-primary" /> فصل: بخش‌های اصلی کتاب</div>
+                <div className="flex items-center gap-2 mb-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> موضوع: تیترهای هر فصل</div>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500" /> زیرمجموعه: نکات یا مفاهیم خرد</div>
+              </div>
+            </div>
+          </div>
        )}
     </div>
   );
@@ -866,6 +904,11 @@ function AdminLessons() {
     queryFn: () => adminGetLessons({ data: { courseId } }),
     enabled: !!courseId 
   });
+  const { data: curriculum } = useQuery({ 
+    queryKey: ['admin-curriculum', courseId], 
+    queryFn: () => adminGetCurriculum({ data: { courseId } }),
+    enabled: !!courseId
+  });
   const [editingLesson, setEditingLesson] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -920,6 +963,10 @@ function AdminLessons() {
           <form className="space-y-4 py-4" onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
+            const chapterId = fd.get('chapter_id') as string;
+            const topicId = fd.get('topic_id') as string;
+            const subtopicId = fd.get('subtopic_id') as string;
+            
             mutation.mutate({
               ...editingLesson,
               title: fd.get('title'),
@@ -927,12 +974,45 @@ function AdminLessons() {
               type: fd.get('type'),
               content: fd.get('content'),
               video_url: fd.get('video_url'),
+              chapter_id: chapterId || null,
+              topic_id: topicId || null,
+              subtopic_id: subtopicId || null,
               is_free_preview: fd.get('is_free') === 'on'
             });
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={editingLesson?.title} required /></div>
               <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingLesson?.slug} required /></div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">فصل</label>
+                <Select name="chapter_id" defaultValue={editingLesson?.chapter_id}>
+                  <SelectTrigger><SelectValue placeholder="انتخاب فصل..." /></SelectTrigger>
+                  <SelectContent>
+                    {curriculum?.chapters?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">موضوع</label>
+                <Select name="topic_id" defaultValue={editingLesson?.topic_id}>
+                  <SelectTrigger><SelectValue placeholder="انتخاب موضوع..." /></SelectTrigger>
+                  <SelectContent>
+                    {curriculum?.topics?.map(t => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">زیرمجموعه</label>
+                <Select name="subtopic_id" defaultValue={editingLesson?.subtopic_id}>
+                  <SelectTrigger><SelectValue placeholder="انتخاب زیرمجموعه..." /></SelectTrigger>
+                  <SelectContent>
+                    {curriculum?.subtopics?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

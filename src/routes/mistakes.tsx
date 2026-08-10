@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useQuery } from "@tanstack/react-query";
@@ -16,19 +17,31 @@ export const Route = createFileRoute("/mistakes")({
 function MistakesPage() {
   const { user } = useAuth();
 
-  const { data: mistakes, isLoading } = useQuery({
+  const { data: mistakes, isLoading, refetch } = useQuery({
     queryKey: ["mistakes", user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
       const { data } = await supabase
         .from("mistake_notebook")
-        .select("*, questions(*, topics(*))")
+        .select("*, questions(*, topics(*), question_options(*))")
         .eq("user_id", user!.id)
         .eq("is_resolved", false)
         .order("last_attempt_at", { ascending: false });
       return data ?? [];
     },
   });
+
+  const resolveMistake = async (id: string) => {
+    const { error } = await supabase
+      .from("mistake_notebook")
+      .update({ is_resolved: true })
+      .eq("id", id);
+    
+    if (!error) {
+      toast.success("سؤال به عنوان یادگرفته شده علامت‌گذاری شد.");
+      refetch();
+    }
+  };
 
   if (!user) {
     return (
@@ -74,7 +87,7 @@ function MistakesPage() {
           <div className="grid gap-6">
             {mistakes?.map((m: any) => (
               <div key={m.id} className="card-surface p-6">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-xs font-bold text-destructive px-2 py-0.5 rounded bg-destructive/10">
@@ -84,12 +97,41 @@ function MistakesPage() {
                         <BookOpen className="size-3" /> {m.questions?.topics?.title}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold leading-8">{m.questions?.body}</h3>
-                    <div className="mt-4 p-4 bg-secondary/50 rounded-lg text-sm italic leading-7 text-muted-foreground">
-                      <span className="font-bold text-foreground">نکته آموزشی:</span> {m.questions?.explanation_tips || "نکته‌ای برای این سؤال ثبت نشده است."}
+                    <h3 className="text-lg font-bold leading-8 mb-4">{m.questions?.body}</h3>
+                    
+                    <div className="space-y-2 mb-6">
+                      {m.questions?.question_options?.map((o: any) => (
+                        <div 
+                          key={o.id} 
+                          className={`p-3 rounded-lg text-sm ${o.is_correct ? 'bg-success/10 border border-success/20 font-bold' : 'bg-secondary'}`}
+                        >
+                          {o.body}
+                          {o.is_correct && <span className="ms-2 text-xs text-success">(پاسخ صحیح)</span>}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-4 bg-primary/5 border border-primary/10 rounded-xl text-sm leading-8 text-foreground">
+                      <div className="flex items-center gap-2 mb-2 text-primary font-bold">
+                        <CheckCircle className="size-4" /> پاسخ تشریحی و نکته
+                      </div>
+                      <p className="mb-2">{m.questions?.explanation}</p>
+                      {m.questions?.explanation_tips && (
+                        <div className="mt-2 pt-2 border-t border-primary/10 italic text-muted-foreground">
+                          نکته: {m.questions?.explanation_tips}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">حذف</Button>
+                  <div className="flex md:flex-col gap-2 shrink-0">
+                    <Button 
+                      className="bg-success hover:bg-success/90 gap-2"
+                      onClick={() => resolveMistake(m.id)}
+                    >
+                      <CheckCircle className="size-4" /> یاد گرفتم
+                    </Button>
+                    <Button variant="outline" size="sm">تمرین مجدد</Button>
+                  </div>
                 </div>
               </div>
             ))}

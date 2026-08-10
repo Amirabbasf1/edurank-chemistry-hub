@@ -693,7 +693,7 @@ function AdminExams() {
                   {filteredQuestions.map(q => (
                     <div key={q.id} className="p-2 border rounded text-[10px] flex items-center justify-between hover:bg-muted/50">
                       <span className="truncate flex-1">{q.body}</span>
-                      <Button type="button" size="xs" variant="ghost" onClick={() => setSelectedQuestions([...selectedQuestions, q.id])}><Plus className="size-3" /></Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setSelectedQuestions([...selectedQuestions, q.id])}><Plus className="size-3" /></Button>
                     </div>
                   ))}
                 </div>

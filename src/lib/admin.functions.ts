@@ -27,7 +27,6 @@ export const adminGetUsers = createServerFn({ method: "GET" })
 export const adminUpdateUserRole = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string; roles: string[] }) => data)
   .handler(async ({ data }) => {
-    // Transactional logic: delete old, insert new
     await supabase.from("user_roles").delete().eq("user_id", data.userId);
     const { error } = await supabase.from("user_roles").insert(
       data.roles.map(r => ({ user_id: data.userId, role: r as any }))
@@ -69,6 +68,7 @@ export const adminUpdateCourse = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    if (!course) throw new Error("Course not found");
     return course;
   });
 
@@ -135,15 +135,25 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     return res;
   });
 
+export const adminDeleteLesson = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("lessons").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
 // --- QUESTIONS ---
 export const adminGetQuestions = createServerFn({ method: "GET" })
-  .inputValidator((data: { q?: string; grade?: string; difficulty?: string; type?: string }) => data)
+  .inputValidator((data: { q?: string; grade?: string; difficulty?: string; type?: string; chapterId?: string; topicId?: string; subtopicId?: string }) => data)
   .handler(async ({ data }) => {
     let query = supabase.from("questions").select("*, question_options(*)").order("created_at", { ascending: false });
     if (data.q) query = query.ilike("body", `%${data.q}%`);
     if (data.grade) query = query.eq("grade", data.grade);
     if (data.difficulty) query = query.eq("difficulty", data.difficulty as any);
     if (data.type) query = query.eq("type", data.type as any);
+    if (data.chapterId) query = query.eq("chapter_id", data.chapterId);
+    if (data.topicId) query = query.eq("topic_id", data.topicId);
     
     const { data: questions, error } = await query;
     if (error) throw error;
@@ -156,7 +166,6 @@ export const adminUpsertQuestion = createServerFn({ method: "POST" })
     const { data: q, error } = await supabase.from("questions").upsert(data.question).select().single();
     if (error) throw error;
     
-    // Manage options: clear old and insert new for simplicity, or upsert by id
     if (data.options.length > 0) {
       await supabase.from("question_options").delete().eq("question_id", q.id);
       await supabase.from("question_options").insert(
@@ -181,7 +190,6 @@ export const adminUpsertExam = createServerFn({ method: "POST" })
     const { data: ex, error } = await supabase.from("exams").upsert(data.exam).select().single();
     if (error) throw error;
     
-    // Manage exam questions
     await supabase.from("exam_questions").delete().eq("exam_id", ex.id);
     if (data.questionIds.length > 0) {
       await supabase.from("exam_questions").insert(
@@ -203,12 +211,35 @@ export const adminGetMedia = createServerFn({ method: "GET" })
     return data;
   });
 
+export const adminCheckFileUsage = createServerFn({ method: "POST" })
+  .inputValidator((data: { fileUrl: string }) => data)
+  .handler(async ({ data }) => {
+    const { data: usage, error } = await supabase.rpc('check_file_usage', { file_url: data.fileUrl });
+    if (error) throw error;
+    return usage;
+  });
+
 export const adminDeleteMedia = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    const { data: media } = await supabase.from("media_library").select("file_url").eq("id", data.id).single();
+    if (media) {
+      const { data: usage } = await supabase.rpc('check_file_usage', { file_url: media.file_url });
+      if (usage && usage.length > 0) {
+        throw new Error("این فایل در بخش‌های دیگر سیستم در حال استفاده است.");
+      }
+    }
     const { error } = await supabase.from("media_library").delete().eq("id", data.id);
     if (error) throw error;
     return { success: true };
+  });
+
+export const adminAddMediaRecord = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { data: res, error } = await supabase.from("media_library").insert([data]).select().single();
+    if (error) throw error;
+    return res;
   });
 
 // --- ARTICLES ---

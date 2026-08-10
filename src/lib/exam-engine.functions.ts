@@ -223,7 +223,7 @@ export const finalizeExamGrading = createServerFn({ method: "POST" })
 
     // 4. Update attempt
     const now = new Date();
-    const startTime = new Date(attempt.started_at);
+    const startTime = new Date(attempt?.started_at || new Date());
     const timeSpent = Math.floor((now.getTime() - startTime.getTime()) / 1000);
 
     const { data: updatedAttempt } = await supabaseAdmin

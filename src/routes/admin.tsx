@@ -11,15 +11,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   adminGetCourses, adminCreateCourse, adminUpdateCourse,
   adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic, adminDeleteSubtopic,
-  adminGetMedia, adminDeleteMedia,
+  adminGetMedia, adminDeleteMedia, adminAddMediaRecord,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
   adminGetExams, adminUpsertExam,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
   adminGetHomepageSections, adminUpdateHomepageSection,
-  adminGetLessons, adminUpsertLesson, adminDeleteLesson
+  adminGetLessons, adminUpsertLesson, adminDeleteLesson,
+  adminGetPages, adminUpsertPage, adminDeletePage,
+  adminGetSiteSettings, adminUpdateSiteSetting,
+  adminGetNavigationMenus, adminUpdateNavigationMenu,
+  adminGetSystemStats
+
 } from "@/lib/admin.functions";
+
 import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -44,19 +50,22 @@ export const Route = createFileRoute("/admin")({
 
 const navItems = [
   { id: 'dashboard', label: 'داشبورد', icon: LayoutDashboard },
-  { id: 'users', label: 'کاربران', icon: Users },
   { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
   { id: 'curriculum', label: 'سرفصل‌ها', icon: GraduationCap },
   { id: 'lessons', label: 'دروس', icon: BookOpen },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
   { id: 'exams', label: 'آزمون‌ها', icon: Package },
+  { id: 'users', label: 'کاربران', icon: Users },
   { id: 'articles', label: 'مقالات', icon: FileText },
+  { id: 'pages', label: 'برگه‌ها', icon: FileText },
   { id: 'media', label: 'کتابخانه رسانه', icon: ImageIcon },
   { id: 'homepage', label: 'صفحه اصلی', icon: Monitor },
+  { id: 'menus', label: 'فهرست‌ها', icon: Monitor },
   { id: 'seo', label: 'سئو', icon: Search },
   { id: 'logs', label: 'گزارشات', icon: ShieldAlert },
   { id: 'settings', label: 'تنظیمات', icon: Settings },
 ];
+
 
 function AdminLayout() {
   const { roles, loading: authLoading } = useAuth();
@@ -123,14 +132,17 @@ function AdminLayout() {
 function AdminContent({ tab }: { tab: string }) {
   switch (tab) {
     case 'dashboard': return <AdminDashboard />;
-    case 'users': return <AdminUsers />;
     case 'courses': return <AdminCourses />;
     case 'curriculum': return <AdminCurriculum />;
     case 'lessons': return <AdminLessons />;
     case 'questions': return <AdminQuestions />;
     case 'exams': return <AdminExams />;
+    case 'users': return <AdminUsers />;
+    case 'articles': return <AdminArticles />;
+    case 'pages': return <AdminPages />;
     case 'media': return <AdminMedia />;
     case 'homepage': return <AdminHomepage />;
+    case 'menus': return <AdminMenus />;
     case 'seo': return <AdminSEO />;
     case 'logs': return <AdminLogs />;
     case 'settings': return <AdminSettings />;
@@ -138,25 +150,33 @@ function AdminContent({ tab }: { tab: string }) {
   }
 }
 
+
 function AdminDashboard() {
+  const { data: stats, isLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: adminGetSystemStats });
+
   return (
     <div className="space-y-8 text-right" dir="rtl">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: 'کل دوره‌ها', value: '۱۲', color: 'bg-blue-500' },
-          { label: 'دانشجویان فعال', value: '۱,۴۵۰', color: 'bg-green-500' },
-          { label: 'فروش ماهانه', value: '۴۵.۲M', color: 'bg-purple-500' },
-          { label: 'آزمون‌های امروز', value: '۱۲۸', color: 'bg-orange-500' },
+          { label: 'دانشجویان', value: stats?.totalStudents || 0, color: 'bg-blue-500', icon: Users },
+          { label: 'دوره‌ها', value: stats?.totalCourses || 0, color: 'bg-green-500', icon: BookOpen },
+          { label: 'دروس', value: stats?.totalLessons || 0, color: 'bg-indigo-500', icon: GraduationCap },
+          { label: 'سوالات', value: stats?.totalQuestions || 0, color: 'bg-purple-500', icon: ClipboardList },
+          { label: 'آزمون‌ها', value: stats?.totalExams || 0, color: 'bg-orange-500', icon: Package },
+          { label: 'شرکت در آزمون', value: stats?.totalAttempts || 0, color: 'bg-red-500', icon: Timer },
         ].map((stat, idx) => (
-          <div key={idx} className="p-6 rounded-2xl bg-white border shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{stat.label}</p>
-              <h3 className="text-2xl font-black mt-1">{stat.value}</h3>
+          <div key={idx} className="p-4 rounded-2xl bg-white border shadow-sm flex flex-col items-center text-center justify-center gap-2">
+            <div className={`size-10 rounded-xl ${stat.color} bg-opacity-10 flex items-center justify-center`}>
+              <stat.icon className={`size-5 text-${stat.color.split('-')[1]}-600`} />
             </div>
-            <div className={`size-10 rounded-xl ${stat.color} opacity-20`} />
+            <div>
+              <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">{stat.label}</p>
+              <h3 className="text-xl font-black mt-1">{isLoading ? '...' : faNumber(stat.value)}</h3>
+            </div>
           </div>
         ))}
       </div>
+
       <div className="bg-muted/10 p-12 rounded-2xl border-2 border-dashed border-muted text-center">
         <Monitor className="size-12 text-muted mx-auto mb-4" />
         <h3 className="text-lg font-bold">نمای کلی سیستم</h3>
@@ -558,53 +578,6 @@ function QuestionBuilderDialog({ isOpen, onClose, question }: { isOpen: boolean,
   );
 }
 
-function AdminMedia() {
-  const { data: media } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
-  return (
-    <div className="space-y-6 text-right" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
-        <Button 
-          size="sm" 
-          className="font-bold gap-2"
-          onClick={async () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = async (e: any) => {
-              const file = e.target.files[0];
-              if (!file) return;
-              const { supabase } = await import('@/integrations/supabase/client');
-              const { adminCreateMediaRecord } = await import('@/lib/admin-media.functions');
-              const { data, error } = await supabase.storage.from('media').upload(`${Date.now()}-${file.name}`, file);
-              if (error) { toast.error('خطا در آپلود'); return; }
-              const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
-              await adminCreateMediaRecord({ data: { filename: file.name, file_url: publicUrl, file_type: file.type, file_size: file.size } });
-              toast.success('فایل با موفقیت آپلود شد');
-              window.location.reload();
-            };
-            input.click();
-          }}
-        >
-          <Plus className="size-4" /> آپلود فایل
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {media?.map(m => (
-          <div key={m.id} className="group relative aspect-square rounded-xl border bg-muted/20 overflow-hidden hover:shadow-md transition-all">
-            {m.file_type.startsWith('image') ? (
-               <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
-            ) : (
-               <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon className="size-8" /></div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-[10px] text-white truncate">{m.filename}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function AdminUsers() {
   const { data: users } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });
@@ -1069,38 +1042,333 @@ function AdminLessons() {
   );
 }
 
-function AdminSEO() {
+function AdminPages() {
+  const queryClient = useQueryClient();
+  const { data: pages, isLoading } = useQuery({ queryKey: ['admin-pages'], queryFn: adminGetPages });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertPage({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
+      setIsDialogOpen(false);
+      toast.success('برگه با موفقیت ذخیره شد');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeletePage({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pages'] });
+      toast.success('برگه حذف شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">مدیریت سئو (SEO)</h2>
-      <div className="bg-muted/10 p-20 rounded-xl border-2 border-dashed border-muted text-center text-muted-foreground">
-        ابزارهای مدیریت متادیتا، سایت‌مپ و بهینه‌سازی موتورهای جستجو در این بخش قرار می‌گیرند.
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت برگه‌ها</h2>
+        <Button onClick={() => { setEditingPage(null); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+          <Plus className="size-4" /> برگه جدید
+        </Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]" dir="rtl">
+          <DialogHeader><DialogTitle className="text-right font-black">ویرایش برگه</DialogTitle></DialogHeader>
+          <form className="space-y-4 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingPage,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              content: fd.get('content'),
+              status: fd.get('status')
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">عنوان برگه</label>
+                <Input name="title" defaultValue={editingPage?.title} required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">نامک (Slug)</label>
+                <Input name="slug" defaultValue={editingPage?.slug} required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">محتوا</label>
+              <Textarea name="content" className="min-h-[300px]" defaultValue={editingPage?.content} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">وضعیت</label>
+              <Select name="status" defaultValue={editingPage?.status || 'draft'}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">پیش‌نویس</SelectItem>
+                  <SelectItem value="published">منتشر شده</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full">ذخیره</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="rounded-xl border overflow-hidden">
+        <Table>
+          <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">نامک</TableHead><TableHead className="text-right">وضعیت</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {isLoading ? <TableRow><TableCell colSpan={4} className="text-center">بارگذاری...</TableCell></TableRow> :
+              pages?.map(p => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-bold">{p.title}</TableCell>
+                  <TableCell>{p.slug}</TableCell>
+                  <TableCell><Badge>{p.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingPage(p); setIsDialogOpen(true); }}>ویرایش</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { if(confirm('حذف شود؟')) deleteMutation.mutate(p.id) }}>حذف</Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            }
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function AdminMenus() {
+  const queryClient = useQueryClient();
+  const { data: menus, isLoading } = useQuery({ queryKey: ['admin-menus'], queryFn: adminGetNavigationMenus });
+  const [selectedMenu, setSelectedMenu] = useState<any>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpdateNavigationMenu({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-menus'] });
+      toast.success('فهرست با موفقیت ذخیره شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت فهرست‌ها</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <h3 className="font-bold">فهرست‌های موجود</h3>
+          {menus?.map(m => (
+            <div key={m.id} className="p-4 rounded-xl border flex items-center justify-between cursor-pointer hover:border-primary" onClick={() => setSelectedMenu(m)}>
+              <span>{m.name} ({m.location})</span>
+              <ArrowRight className="size-4" />
+            </div>
+          ))}
+          <Button variant="outline" className="w-full" onClick={() => setSelectedMenu({ name: 'فهرست جدید', location: 'header', items: [] })}>ایجاد فهرست جدید</Button>
+        </div>
+
+        {selectedMenu && (
+          <div className="space-y-4 border p-6 rounded-2xl bg-white shadow-sm">
+            <h3 className="font-bold">ویرایش {selectedMenu.name}</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">نام فهرست</label>
+              <Input value={selectedMenu.name} onChange={e => setSelectedMenu({...selectedMenu, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">مکان نمایش</label>
+              <Select value={selectedMenu.location} onValueChange={v => setSelectedMenu({...selectedMenu, location: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="header">هدر (بالا)</SelectItem>
+                  <SelectItem value="footer">فوتر (پایین)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold">آیتم‌های فهرست</label>
+                <Button variant="ghost" className="h-7 text-[10px]" onClick={() => setSelectedMenu({...selectedMenu, items: [...selectedMenu.items, { label: 'آیتم جدید', url: '/' }]})}><Plus className="size-3" /> افزودن</Button>
+              </div>
+              <ScrollArea className="h-64 border rounded-lg p-2">
+                {selectedMenu.items.map((item: any, idx: number) => (
+                  <div key={idx} className="p-2 border rounded mb-2 space-y-2 bg-muted/30">
+                    <div className="flex gap-2">
+                      <Input placeholder="عنوان" value={item.label} onChange={e => {
+                        const newItems = [...selectedMenu.items];
+                        newItems[idx].label = e.target.value;
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }} />
+                      <Input placeholder="لینک" value={item.url} onChange={e => {
+                        const newItems = [...selectedMenu.items];
+                        newItems[idx].url = e.target.value;
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }} />
+                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => {
+                        const newItems = selectedMenu.items.filter((_: any, i: number) => i !== idx);
+                        setSelectedMenu({...selectedMenu, items: newItems});
+                      }}><Trash2 className="size-4" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <Button className="w-full" onClick={() => mutation.mutate(selectedMenu)}>ذخیره تغییرات فهرست</Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AdminSEO() {
+  const { data: settings } = useQuery({ queryKey: ['admin-settings'], queryFn: adminGetSiteSettings });
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpdateSiteSetting({ data }),
+    onSuccess: () => {
+      toast.success('تنظیمات سئو ذخیره شد');
+    }
+  });
+
+  const getVal = (key: string) => settings?.find(s => s.key === key)?.value || "";
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <h2 className="text-xl font-black">مدیریت سئو سراسری</h2>
+      <div className="grid gap-6 max-w-2xl">
+        <div className="space-y-2">
+          <label className="text-xs font-bold">عنوان سایت</label>
+          <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold">توضیحات سایت (Meta Description)</label>
+          <Textarea defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold">کلمات کلیدی (جدا شده با کاما)</label>
+          <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function AdminMedia() {
+  const queryClient = useQueryClient();
+  const { data: media, isLoading } = useQuery({ queryKey: ['admin-media'], queryFn: adminGetMedia });
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeleteMedia({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+      toast.success('فایل حذف شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">کتابخانه رسانه</h2>
+        <Button 
+          size="sm" 
+          className="font-bold gap-2"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e: any) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              
+              const toastId = toast.loading('در حال آپلود...');
+              try {
+                const filePath = `${Math.random()}-${file.name}`;
+                const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                if (uploadError) throw uploadError;
+                
+                const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
+                await adminAddMediaRecord({
+                  data: {
+                    filename: file.name,
+                    file_url: publicUrl,
+                    file_type: file.type,
+                    file_size: file.size
+                  }
+                });
+
+                queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+                toast.success('فایل با موفقیت آپلود شد', { id: toastId });
+              } catch (err: any) {
+                toast.error(err.message || 'خطا در آپلود', { id: toastId });
+              }
+            };
+            input.click();
+          }}
+        >
+          <Plus className="size-4" /> آپلود رسانه
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {isLoading ? <div>در حال بارگذاری...</div> :
+          media?.map(m => (
+            <div key={m.id} className="group relative aspect-square rounded-xl border overflow-hidden bg-muted/20">
+              {m.file_type.startsWith('image/') ? (
+                <img src={m.file_url} alt={m.filename} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                  <ImageIcon className="size-8 text-muted-foreground mb-2" />
+                  <span className="text-[10px] font-bold text-center line-clamp-2">{m.filename}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button size="icon" variant="ghost" className="text-white" onClick={() => window.open(m.file_url, '_blank')}><Eye className="size-4" /></Button>
+                <Button size="icon" variant="ghost" className="text-destructive" onClick={() => { if(confirm('حذف شود؟')) deleteMutation.mutate(m.id) }}><Trash2 className="size-4" /></Button>
+              </div>
+            </div>
+          ))
+        }
       </div>
     </div>
   );
 }
 
 function AdminSettings() {
+
   return (
-    <div className="space-y-6 text-right" dir="rtl">
-      <h2 className="text-xl font-black">تنظیمات سیستم</h2>
-      <div className="grid gap-6">
-        <div className="p-6 rounded-2xl border space-y-4">
-           <h3 className="font-bold border-b pb-2">تنظیمات عمومی</h3>
-           <div className="grid gap-4 max-w-md">
+    <div className="space-y-8 text-right" dir="rtl">
+      <h2 className="text-xl font-black">تنظیمات پلتفرم</h2>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+          <TabsTrigger value="general">عمومی</TabsTrigger>
+          <TabsTrigger value="branding">برندینگ</TabsTrigger>
+          <TabsTrigger value="learning">آموزش</TabsTrigger>
+          <TabsTrigger value="security">امنیت</TabsTrigger>
+        </TabsList>
+        <TabsContent value="general" className="mt-6 space-y-4">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm max-w-md">
+            <h3 className="font-bold mb-4">تنظیمات عمومی</h3>
+            <div className="space-y-4">
               <div className="space-y-2">
-                 <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
-                 <Input defaultValue="ادیورَنک" />
+                <label className="text-xs font-bold text-muted-foreground">نام پلتفرم</label>
+                <Input defaultValue="ادیورَنک" />
               </div>
               <div className="space-y-2">
-                 <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
-                 <Input defaultValue="support@edurank.ir" />
+                <label className="text-xs font-bold text-muted-foreground">ایمیل پشتیبانی</label>
+                <Input defaultValue="support@edurank.ir" />
               </div>
-           </div>
-        </div>
-      </div>
+              <Button size="sm" className="w-full">ذخیره تنظیمات</Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
+
+
+
 
 

@@ -177,7 +177,9 @@
   transition-duration: 300ms;
 }
 
-.dark @utility bg-hero-gradient {
-  background: linear-gradient(135deg, oklch(0.208 0.042 265.755), oklch(0.129 0.042 264.695));
+@variant dark {
+  .bg-hero-gradient {
+    background: linear-gradient(135deg, oklch(0.208 0.042 265.755), oklch(0.129 0.042 264.695));
+  }
 }
 

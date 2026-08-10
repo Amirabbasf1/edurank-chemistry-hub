@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
-  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package
+  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

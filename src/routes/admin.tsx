@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
-  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search
+  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search, Trash2, CheckCircle2
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -16,8 +16,11 @@ import {
   adminGetExams, adminUpsertExam,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
-  adminGetHomepageSections, adminUpdateHomepageSection
+  adminGetHomepageSections, adminUpdateHomepageSection,
+  adminGetLessons, adminUpsertLesson, adminDeleteLesson
 } from "@/lib/admin.functions";
+import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
@@ -40,6 +43,7 @@ const navItems = [
   { id: 'users', label: 'کاربران', icon: Users },
   { id: 'courses', label: 'دوره‌ها', icon: BookOpen },
   { id: 'curriculum', label: 'سرفصل‌ها', icon: GraduationCap },
+  { id: 'lessons', label: 'دروس', icon: BookOpen },
   { id: 'questions', label: 'بانک سؤالات', icon: ClipboardList },
   { id: 'exams', label: 'آزمون‌ها', icon: Package },
   { id: 'articles', label: 'مقالات', icon: FileText },
@@ -118,9 +122,9 @@ function AdminContent({ tab }: { tab: string }) {
     case 'users': return <AdminUsers />;
     case 'courses': return <AdminCourses />;
     case 'curriculum': return <AdminCurriculum />;
+    case 'lessons': return <AdminLessons />;
     case 'questions': return <AdminQuestions />;
     case 'exams': return <AdminExams />;
-    case 'articles': return <AdminArticles />;
     case 'media': return <AdminMedia />;
     case 'homepage': return <AdminHomepage />;
     case 'seo': return <AdminSEO />;
@@ -362,10 +366,16 @@ function AdminCurriculum() {
               </div>
             </div>
             
-            <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
-              <Plus className="size-8 mb-4" />
-              <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
-            </div>
+             <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20">
+               <h3 className="font-bold text-primary mb-2">مدیریت سلسله‌مراتب</h3>
+               <p className="text-xs">در این بخش می‌توانید موضوعات و زیرمجموعه‌ها را مدیریت کنید.</p>
+               <div className="flex gap-2 mt-4">
+                 <Button size="sm" variant="outline" onClick={() => {
+                   const title = prompt('عنوان موضوع جدید:');
+                   if (title) adminUpsertTopic({ data: { title, sort_order: (curriculum?.topics?.length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                 }}>افزودن موضوع</Button>
+               </div>
+             </div>
          </div>
        )}
     </div>
@@ -489,7 +499,29 @@ function AdminMedia() {
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">کتابخانه رسانه</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آپلود فایل</Button>
+        <Button 
+          size="sm" 
+          className="font-bold gap-2"
+          onClick={async () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e: any) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const { supabase } = await import('@/integrations/supabase/client');
+              const { adminCreateMediaRecord } = await import('@/lib/admin-media.functions');
+              const { data, error } = await supabase.storage.from('media').upload(`${Date.now()}-${file.name}`, file);
+              if (error) { toast.error('خطا در آپلود'); return; }
+              const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
+              await adminCreateMediaRecord({ data: { filename: file.name, file_url: publicUrl, file_type: file.type, file_size: file.size } });
+              toast.success('فایل با موفقیت آپلود شد');
+              window.location.reload();
+            };
+            input.click();
+          }}
+        >
+          <Plus className="size-4" /> آپلود فایل
+        </Button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {media?.map(m => (
@@ -578,38 +610,127 @@ function AdminLogs() {
 }
 
 function AdminExams() {
+  const queryClient = useQueryClient();
   const { data: exams } = useQuery({ queryKey: ['admin-exams'], queryFn: adminGetExams });
+  const { data: allQuestions } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const [editingExam, setEditingExam] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [searchQ, setSearchQ] = useState("");
+
+  const filteredQuestions = useMemo(() => {
+    if (!allQuestions) return [];
+    return allQuestions.filter(q => q.body.includes(searchQ) && !selectedQuestions.includes(q.id));
+  }, [allQuestions, searchQ, selectedQuestions]);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertExam({ data: { exam: data, questionIds: selectedQuestions } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-exams'] });
+      setIsDialogOpen(false);
+      toast.success('آزمون ذخیره شد');
+    }
+  });
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">مدیریت آزمون‌ها</h2>
-        <Button size="sm" className="font-bold gap-2"><Plus className="size-4" /> آزمون جدید</Button>
+        <Button onClick={() => { setEditingExam(null); setSelectedQuestions([]); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+          <Plus className="size-4" /> آزمون جدید
+        </Button>
       </div>
+
       <div className="rounded-xl border overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="text-right">عنوان</TableHead>
-              <TableHead className="text-right">مدت زمان</TableHead>
-              <TableHead className="text-right">وضعیت</TableHead>
-              <TableHead className="text-right">عملیات</TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">مدت</TableHead><TableHead className="text-right">وضعیت</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
           <TableBody>
             {exams?.map(e => (
               <TableRow key={e.id}>
                 <TableCell className="font-bold">{e.title}</TableCell>
                 <TableCell>{faNumber(e.duration_minutes)} دقیقه</TableCell>
                 <TableCell><Badge>{e.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">ویرایش</Button></TableCell>
+                <TableCell><Button variant="ghost" size="sm" onClick={() => {
+                  setEditingExam(e);
+                  // In real app, load existing question IDs
+                  setSelectedQuestions([]); 
+                  setIsDialogOpen(true);
+                }}>ویرایش</Button></TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle className="font-black text-right">طراحی آزمون</DialogTitle></DialogHeader>
+          <form className="space-y-6 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingExam,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              duration_minutes: Number(fd.get('duration')),
+              is_published: fd.get('published') === 'on'
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><label className="text-xs font-bold">عنوان آزمون</label><Input name="title" defaultValue={editingExam?.title} required /></div>
+              <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingExam?.slug} required /></div>
+            </div>
+            
+            <div className="space-y-4 border p-4 rounded-xl bg-muted/5">
+              <h3 className="font-black text-sm flex items-center gap-2"><ClipboardList className="size-4" /> انتخاب سؤالات</h3>
+              <div className="flex gap-2">
+                <Input placeholder="جستجو در بانک سؤالات..." value={searchQ} onChange={e => setSearchQ(e.target.value)} className="text-xs" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 h-[300px]">
+                <div className="border rounded-lg p-2 overflow-y-auto space-y-2 bg-white">
+                  <p className="text-[10px] font-bold text-muted-foreground mb-2">سؤالات موجود</p>
+                  {filteredQuestions.map(q => (
+                    <div key={q.id} className="p-2 border rounded text-[10px] flex items-center justify-between hover:bg-muted/50">
+                      <span className="truncate flex-1">{q.body}</span>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setSelectedQuestions([...selectedQuestions, q.id])}><Plus className="size-3" /></Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="border rounded-lg p-2 overflow-y-auto space-y-2 bg-primary/5 border-primary/20">
+                  <p className="text-[10px] font-bold text-primary mb-2">سؤالات انتخاب شده ({selectedQuestions.length})</p>
+                  {selectedQuestions.map((qid, idx) => {
+                    const q = allQuestions?.find(x => x.id === qid);
+                    return (
+                      <div key={qid} className="p-2 border rounded text-[10px] flex items-center justify-between bg-white">
+                        <span className="truncate flex-1 font-bold">{idx + 1}. {q?.body}</span>
+                        <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => setSelectedQuestions(selectedQuestions.filter(id => id !== qid))}><Trash2 className="size-3" /></Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+               <div className="flex-1 space-y-2">
+                 <label className="text-xs font-bold">مدت زمان (دقیقه)</label>
+                 <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+               </div>
+               <div className="flex items-center gap-2 mt-6">
+                 <input type="checkbox" name="published" defaultChecked={editingExam?.is_published} />
+                 <label className="text-xs font-bold">انتشار عمومی</label>
+               </div>
+            </div>
+            
+            <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره نهایی آزمون</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function AdminArticles() {
   const queryClient = useQueryClient();
@@ -736,6 +857,110 @@ function AdminHomepage() {
   );
 }
 
+function AdminLessons() {
+  const queryClient = useQueryClient();
+  const [courseId, setCourseId] = useState("");
+  const { data: courses } = useQuery({ queryKey: ['admin-courses'], queryFn: adminGetCourses });
+  const { data: lessons, isLoading } = useQuery({ 
+    queryKey: ['admin-lessons', courseId], 
+    queryFn: () => adminGetLessons({ data: { courseId } }),
+    enabled: !!courseId 
+  });
+  const [editingLesson, setEditingLesson] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => adminUpsertLesson({ data: { ...data, course_id: courseId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] });
+      setIsDialogOpen(false);
+      toast.success('درس با موفقیت ذخیره شد');
+    }
+  });
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">مدیریت دروس</h2>
+        <div className="flex gap-4">
+          <Select onValueChange={setCourseId} value={courseId}>
+            <SelectTrigger className="w-64"><SelectValue placeholder="انتخاب دوره..." /></SelectTrigger>
+            <SelectContent>{courses?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
+          </Select>
+          <Button disabled={!courseId} onClick={() => { setEditingLesson(null); setIsDialogOpen(true); }} size="sm" className="font-bold gap-2">
+            <Plus className="size-4" /> درس جدید
+          </Button>
+        </div>
+      </div>
+      
+      {!courseId ? (
+        <div className="p-20 border-2 border-dashed rounded-2xl text-center text-muted-foreground">دوره ای را انتخاب کنید</div>
+      ) : (
+        <div className="rounded-xl border overflow-hidden">
+          <Table>
+            <TableHeader><TableRow><TableHead className="text-right">عنوان</TableHead><TableHead className="text-right">نوع</TableHead><TableHead className="text-right">عملیات</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {isLoading ? <TableRow><TableCell colSpan={3} className="text-center">بارگذاری...</TableCell></TableRow> :
+                lessons?.map(l => (
+                  <TableRow key={l.id}>
+                    <TableCell className="font-bold">{l.title}</TableCell>
+                    <TableCell><Badge variant="outline">{l.type}</Badge></TableCell>
+                    <TableCell><Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button></TableCell>
+                  </TableRow>
+                ))
+              }
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle className="font-black text-right">ویرایش درس</DialogTitle></DialogHeader>
+          <form className="space-y-4 py-4" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            mutation.mutate({
+              ...editingLesson,
+              title: fd.get('title'),
+              slug: fd.get('slug'),
+              type: fd.get('type'),
+              content: fd.get('content'),
+              video_url: fd.get('video_url'),
+              is_free_preview: fd.get('is_free') === 'on'
+            });
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={editingLesson?.title} required /></div>
+              <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingLesson?.slug} required /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">نوع محتوا</label>
+                <Select name="type" defaultValue={editingLesson?.type || 'video'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">ویدیو</SelectItem>
+                    <SelectItem value="article">نوشتاری</SelectItem>
+                    <SelectItem value="quiz">آزمونک</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><label className="text-xs font-bold">لینک ویدیو (در صورت وجود)</label><Input name="video_url" defaultValue={editingLesson?.video_url} /></div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold">محتوای متنی (Rich-text Markdown)</label>
+              <textarea name="content" className="w-full min-h-[200px] border p-3 rounded-lg text-sm" defaultValue={editingLesson?.content} />
+            </div>
+            <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره درس</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function AdminSEO() {
   return (
     <div className="space-y-6 text-right" dir="rtl">
@@ -769,4 +994,5 @@ function AdminSettings() {
     </div>
   );
 }
+
 

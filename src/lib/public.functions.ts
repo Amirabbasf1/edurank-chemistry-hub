@@ -85,15 +85,14 @@ export const listCourses = createServerFn({ method: "GET" }).handler(async () =>
 });
 
 export const getCourse = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
+  .inputValidator((data: { slug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: course } = await db
-      .from("courses")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("status", "published")
-      .maybeSingle();
+    let query = db.from("courses").select("*").eq("slug", data.slug);
+    if (!data.staffMode) {
+      query = query.eq("status", "published");
+    }
+    const { data: course } = await query.maybeSingle();
     if (!course) return null;
     const [chapters, lessons, reviews, related] = await Promise.all([
       db.from("chapters").select("*").eq("course_id", course.id).order("sort_order"),

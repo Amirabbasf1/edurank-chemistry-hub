@@ -1554,7 +1554,16 @@ export type Database = {
     }
     Enums: {
       access_type: "free" | "paid" | "subscription"
-      app_role: "student" | "instructor" | "admin" | "super_admin"
+      app_role:
+        | "student"
+        | "instructor"
+        | "admin"
+        | "super_admin"
+        | "content_manager"
+        | "exam_manager"
+        | "support_manager"
+        | "financial_manager"
+        | "seo_manager"
       chemistry_grade: "grade_10" | "grade_11" | "grade_12" | "konkur"
       course_status: "draft" | "published" | "archived"
       difficulty: "beginner" | "intermediate" | "advanced"
@@ -1692,7 +1701,17 @@ export const Constants = {
   public: {
     Enums: {
       access_type: ["free", "paid", "subscription"],
-      app_role: ["student", "instructor", "admin", "super_admin"],
+      app_role: [
+        "student",
+        "instructor",
+        "admin",
+        "super_admin",
+        "content_manager",
+        "exam_manager",
+        "support_manager",
+        "financial_manager",
+        "seo_manager",
+      ],
       chemistry_grade: ["grade_10", "grade_11", "grade_12", "konkur"],
       course_status: ["draft", "published", "archived"],
       difficulty: ["beginner", "intermediate", "advanced"],

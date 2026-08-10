@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   LayoutDashboard, Users, BookOpen, ClipboardList, FileText, Image as ImageIcon, 
-  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search, Trash2, CheckCircle2
+  Settings, ShieldAlert, Plus, Monitor, GraduationCap, Package, Search, Trash2, 
+  CheckCircle2, Filter, MoreHorizontal, Eye, Copy, ArrowRight, Save, X, Beaker, Timer
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 

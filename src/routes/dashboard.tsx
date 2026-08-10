@@ -223,7 +223,7 @@ function DashboardPage() {
                   {(data?.notifications ?? []).map((n: any) => (
                     <div key={n.id} className={`text-xs p-2 rounded-lg ${n.is_read ? 'opacity-60' : 'bg-primary/5'}`}>
                       <p className="font-bold">{n.title}</p>
-                      <p className="text-muted-foreground mt-1 leading-5">{n.content}</p>
+                      <p className="text-muted-foreground mt-1 leading-5">{n.body || n.content}</p>
                     </div>
                   ))}
                 </div>

@@ -422,7 +422,8 @@ function AdminCurriculum() {
 
 function AdminQuestions() {
   const queryClient = useQueryClient();
-  const { data: questions, isLoading } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const { data: qData, isLoading } = useQuery({ queryKey: ['admin-questions'], queryFn: () => adminGetQuestions({ data: {} }) });
+  const questions = qData?.questions || [];
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
 

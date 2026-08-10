@@ -213,6 +213,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_values: Json | null
+          previous_values: Json | null
+          target_id: string
+          target_type: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          previous_values?: Json | null
+          target_id: string
+          target_type: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          previous_values?: Json | null
+          target_id?: string
+          target_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -331,6 +364,7 @@ export type Database = {
           rating: number
           requirements: string[]
           seo_description: string | null
+          seo_metadata: Json | null
           seo_title: string | null
           short_description: string | null
           slug: string
@@ -361,6 +395,7 @@ export type Database = {
           rating?: number
           requirements?: string[]
           seo_description?: string | null
+          seo_metadata?: Json | null
           seo_title?: string | null
           short_description?: string | null
           slug: string
@@ -391,6 +426,7 @@ export type Database = {
           rating?: number
           requirements?: string[]
           seo_description?: string | null
+          seo_metadata?: Json | null
           seo_title?: string | null
           short_description?: string | null
           slug?: string
@@ -684,6 +720,36 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_sections: {
+        Row: {
+          content: Json | null
+          id: string
+          is_active: boolean | null
+          section_slug: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json | null
+          id?: string
+          is_active?: boolean | null
+          section_slug: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json | null
+          id?: string
+          is_active?: boolean | null
+          section_slug?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed_at: string | null
@@ -786,6 +852,7 @@ export type Database = {
           duration_seconds: number
           id: string
           is_free_preview: boolean
+          seo_metadata: Json | null
           slug: string
           sort_order: number
           summary: string | null
@@ -805,6 +872,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_free_preview?: boolean
+          seo_metadata?: Json | null
           slug: string
           sort_order?: number
           summary?: string | null
@@ -824,6 +892,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_free_preview?: boolean
+          seo_metadata?: Json | null
           slug?: string
           sort_order?: number
           summary?: string | null
@@ -857,6 +926,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      media_library: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          filename: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          filename: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          filename?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
       }
       mistake_notebook: {
         Row: {
@@ -1108,6 +1210,7 @@ export type Database = {
           points: number
           question_type: Database["public"]["Enums"]["lesson_type"] | null
           source: string | null
+          status: Database["public"]["Enums"]["course_status"] | null
           subtopic: string | null
           tags: string[]
           topic_id: string | null
@@ -1131,6 +1234,7 @@ export type Database = {
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
           source?: string | null
+          status?: Database["public"]["Enums"]["course_status"] | null
           subtopic?: string | null
           tags?: string[]
           topic_id?: string | null
@@ -1154,6 +1258,7 @@ export type Database = {
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
           source?: string | null
+          status?: Database["public"]["Enums"]["course_status"] | null
           subtopic?: string | null
           tags?: string[]
           topic_id?: string | null

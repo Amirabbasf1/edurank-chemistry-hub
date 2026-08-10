@@ -115,15 +115,14 @@ export const getCourse = createServerFn({ method: "GET" })
   });
 
 export const getLesson = createServerFn({ method: "GET" })
-  .inputValidator((data: { courseSlug: string; lessonSlug: string }) => data)
+  .inputValidator((data: { courseSlug: string; lessonSlug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: course } = await db
-      .from("courses")
-      .select("*")
-      .eq("slug", data.courseSlug)
-      .eq("status", "published")
-      .maybeSingle();
+    let courseQuery = db.from("courses").select("*").eq("slug", data.courseSlug);
+    if (!data.staffMode) {
+      courseQuery = courseQuery.eq("status", "published");
+    }
+    const { data: course } = await courseQuery.maybeSingle();
     if (!course) return null;
     const [lessonRes, chapters, lessons] = await Promise.all([
       db.from("lessons").select("*").eq("course_id", course.id).eq("slug", data.lessonSlug).maybeSingle(),

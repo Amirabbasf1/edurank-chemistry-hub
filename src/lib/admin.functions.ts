@@ -403,3 +403,100 @@ export const adminUpdateHomepageSection = createServerFn({ method: "POST" })
     if (error) throw error;
     return section;
   });
+
+// --- PAGES ---
+export const adminGetPages = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabase
+      .from("pages")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  });
+
+export const adminUpsertPage = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { data: res, error } = await supabase.from("pages").upsert(data).select().single();
+    if (error) throw error;
+    return res;
+  });
+
+export const adminDeletePage = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("pages").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
+// --- SITE SETTINGS ---
+export const adminGetSiteSettings = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabase.from("site_settings").select("*");
+    if (error) throw error;
+    return data;
+  });
+
+export const adminUpdateSiteSetting = createServerFn({ method: "POST" })
+  .inputValidator((data: { key: string; value: any; description?: string }) => data)
+  .handler(async ({ data }) => {
+    const { data: res, error } = await supabase
+      .from("site_settings")
+      .upsert({ key: data.key, value: data.value, description: data.description })
+      .select()
+      .single();
+    if (error) throw error;
+    return res;
+  });
+
+// --- NAVIGATION ---
+export const adminGetNavigationMenus = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabase.from("navigation_menus").select("*");
+    if (error) throw error;
+    return data;
+  });
+
+export const adminUpdateNavigationMenu = createServerFn({ method: "POST" })
+  .inputValidator((data: { location: string; items: any[]; name: string }) => data)
+  .handler(async ({ data }) => {
+    const { data: res, error } = await supabase
+      .from("navigation_menus")
+      .upsert({ location: data.location, items: data.items, name: data.name })
+      .select()
+      .single();
+    if (error) throw error;
+    return res;
+  });
+
+// --- ANALYTICS ---
+export const adminGetSystemStats = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const [
+      { count: students },
+      { count: courses },
+      { count: lessons },
+      { count: questions },
+      { count: exams },
+      { count: attempts }
+    ] = await Promise.all([
+      supabase.from("profiles").select("*", { count: 'exact', head: true }),
+      supabase.from("courses").select("*", { count: 'exact', head: true }),
+      supabase.from("lessons").select("*", { count: 'exact', head: true }),
+      supabase.from("questions").select("*", { count: 'exact', head: true }),
+      supabase.from("exams").select("*", { count: 'exact', head: true }),
+      supabase.from("exam_attempts").select("*", { count: 'exact', head: true }),
+    ]);
+
+    return {
+      totalStudents: students || 0,
+      totalCourses: courses || 0,
+      totalLessons: lessons || 0,
+      totalQuestions: questions || 0,
+      totalExams: exams || 0,
+      totalAttempts: attempts || 0,
+    };
+  });
+

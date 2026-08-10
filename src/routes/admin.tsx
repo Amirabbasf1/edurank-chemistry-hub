@@ -13,7 +13,7 @@ import {
   adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic, adminDeleteSubtopic,
   adminGetMedia, adminDeleteMedia,
   adminGetUsers, adminUpdateUserRole,
-  adminGetQuestions, adminUpsertQuestion,
+  adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
   adminGetExams, adminUpsertExam,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,

@@ -85,15 +85,14 @@ export const listCourses = createServerFn({ method: "GET" }).handler(async () =>
 });
 
 export const getCourse = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
+  .inputValidator((data: { slug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: course } = await db
-      .from("courses")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("status", "published")
-      .maybeSingle();
+    let query = db.from("courses").select("*").eq("slug", data.slug);
+    if (!data.staffMode) {
+      query = query.eq("status", "published");
+    }
+    const { data: course } = await query.maybeSingle();
     if (!course) return null;
     const [chapters, lessons, reviews, related] = await Promise.all([
       db.from("chapters").select("*").eq("course_id", course.id).order("sort_order"),
@@ -116,15 +115,14 @@ export const getCourse = createServerFn({ method: "GET" })
   });
 
 export const getLesson = createServerFn({ method: "GET" })
-  .inputValidator((data: { courseSlug: string; lessonSlug: string }) => data)
+  .inputValidator((data: { courseSlug: string; lessonSlug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: course } = await db
-      .from("courses")
-      .select("*")
-      .eq("slug", data.courseSlug)
-      .eq("status", "published")
-      .maybeSingle();
+    let courseQuery = db.from("courses").select("*").eq("slug", data.courseSlug);
+    if (!data.staffMode) {
+      courseQuery = courseQuery.eq("status", "published");
+    }
+    const { data: course } = await courseQuery.maybeSingle();
     if (!course) return null;
     const [lessonRes, chapters, lessons] = await Promise.all([
       db.from("lessons").select("*").eq("course_id", course.id).eq("slug", data.lessonSlug).maybeSingle(),
@@ -150,15 +148,14 @@ export const listArticles = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getArticle = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
+  .inputValidator((data: { slug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: article } = await db
-      .from("articles")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("is_published", true)
-      .maybeSingle();
+    let query = db.from("articles").select("*").eq("slug", data.slug);
+    if (!data.staffMode) {
+      query = query.eq("is_published", true);
+    }
+    const { data: article } = await query.maybeSingle();
     if (!article) return null;
     const [related, course, category] = await Promise.all([
       db
@@ -184,15 +181,14 @@ export const listExams = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const getExam = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
+  .inputValidator((data: { slug: string; staffMode?: boolean }) => data)
   .handler(async ({ data }) => {
     const db = publicClient();
-    const { data: exam } = await db
-      .from("exams")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("is_published", true)
-      .maybeSingle();
+    let query = db.from("exams").select("*").eq("slug", data.slug);
+    if (!data.staffMode) {
+      query = query.eq("is_published", true);
+    }
+    const { data: exam } = await query.maybeSingle();
     if (!exam) return null;
     const { data: rows } = await db
       .from("exam_questions")

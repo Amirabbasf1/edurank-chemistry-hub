@@ -134,6 +134,7 @@ export type Database = {
       }
       articles: {
         Row: {
+          archived_at: string | null
           author_id: string | null
           author_name: string | null
           category_id: string | null
@@ -146,6 +147,7 @@ export type Database = {
           published_at: string
           reading_minutes: number
           related_course_id: string | null
+          scheduled_at: string | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -155,6 +157,7 @@ export type Database = {
           views: number
         }
         Insert: {
+          archived_at?: string | null
           author_id?: string | null
           author_name?: string | null
           category_id?: string | null
@@ -167,6 +170,7 @@ export type Database = {
           published_at?: string
           reading_minutes?: number
           related_course_id?: string | null
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -176,6 +180,7 @@ export type Database = {
           views?: number
         }
         Update: {
+          archived_at?: string | null
           author_id?: string | null
           author_name?: string | null
           category_id?: string | null
@@ -188,6 +193,7 @@ export type Database = {
           published_at?: string
           reading_minutes?: number
           related_course_id?: string | null
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -244,7 +250,15 @@ export type Database = {
           target_type?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bookmarks: {
         Row: {
@@ -346,6 +360,7 @@ export type Database = {
       courses: {
         Row: {
           access: Database["public"]["Enums"]["access_type"]
+          archived_at: string | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -363,6 +378,7 @@ export type Database = {
           price: number
           rating: number
           requirements: string[]
+          scheduled_at: string | null
           seo_description: string | null
           seo_metadata: Json | null
           seo_title: string | null
@@ -377,6 +393,7 @@ export type Database = {
         }
         Insert: {
           access?: Database["public"]["Enums"]["access_type"]
+          archived_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -394,6 +411,7 @@ export type Database = {
           price?: number
           rating?: number
           requirements?: string[]
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_metadata?: Json | null
           seo_title?: string | null
@@ -408,6 +426,7 @@ export type Database = {
         }
         Update: {
           access?: Database["public"]["Enums"]["access_type"]
+          archived_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -425,6 +444,7 @@ export type Database = {
           price?: number
           rating?: number
           requirements?: string[]
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_metadata?: Json | null
           seo_title?: string | null
@@ -635,6 +655,7 @@ export type Database = {
       }
       exams: {
         Row: {
+          archived_at: string | null
           chapter_id: string | null
           course_id: string | null
           created_at: string
@@ -645,10 +666,12 @@ export type Database = {
           id: string
           is_published: boolean
           question_count: number
+          scheduled_at: string | null
           slug: string
           title: string
         }
         Insert: {
+          archived_at?: string | null
           chapter_id?: string | null
           course_id?: string | null
           created_at?: string
@@ -659,10 +682,12 @@ export type Database = {
           id?: string
           is_published?: boolean
           question_count?: number
+          scheduled_at?: string | null
           slug: string
           title: string
         }
         Update: {
+          archived_at?: string | null
           chapter_id?: string | null
           course_id?: string | null
           created_at?: string
@@ -673,6 +698,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           question_count?: number
+          scheduled_at?: string | null
           slug?: string
           title?: string
         }
@@ -845,16 +871,21 @@ export type Database = {
       lessons: {
         Row: {
           access: Database["public"]["Enums"]["access_type"]
+          archived_at: string | null
           chapter_id: string | null
+          chemistry_formula: string | null
           content: string | null
           course_id: string
           created_at: string
           duration_seconds: number
           id: string
           is_free_preview: boolean
+          practice_questions: Json | null
+          scheduled_at: string | null
           seo_metadata: Json | null
           slug: string
           sort_order: number
+          subtopic_id: string | null
           summary: string | null
           title: string
           topic_id: string | null
@@ -865,16 +896,21 @@ export type Database = {
         }
         Insert: {
           access?: Database["public"]["Enums"]["access_type"]
+          archived_at?: string | null
           chapter_id?: string | null
+          chemistry_formula?: string | null
           content?: string | null
           course_id: string
           created_at?: string
           duration_seconds?: number
           id?: string
           is_free_preview?: boolean
+          practice_questions?: Json | null
+          scheduled_at?: string | null
           seo_metadata?: Json | null
           slug: string
           sort_order?: number
+          subtopic_id?: string | null
           summary?: string | null
           title: string
           topic_id?: string | null
@@ -885,16 +921,21 @@ export type Database = {
         }
         Update: {
           access?: Database["public"]["Enums"]["access_type"]
+          archived_at?: string | null
           chapter_id?: string | null
+          chemistry_formula?: string | null
           content?: string | null
           course_id?: string
           created_at?: string
           duration_seconds?: number
           id?: string
           is_free_preview?: boolean
+          practice_questions?: Json | null
+          scheduled_at?: string | null
           seo_metadata?: Json | null
           slug?: string
           sort_order?: number
+          subtopic_id?: string | null
           summary?: string | null
           title?: string
           topic_id?: string | null
@@ -916,6 +957,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
             referencedColumns: ["id"]
           },
           {
@@ -1114,6 +1162,27 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          action: string
+          id: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          action: string
+          id?: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          action?: string
+          id?: string
+          resource?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1194,6 +1263,7 @@ export type Database = {
       questions: {
         Row: {
           alternative_solutions: string | null
+          archived_at: string | null
           body: string
           chapter_id: string | null
           correct_text: string | null
@@ -1209,15 +1279,18 @@ export type Database = {
           lesson_id: string | null
           points: number
           question_type: Database["public"]["Enums"]["lesson_type"] | null
+          scheduled_at: string | null
           source: string | null
           status: Database["public"]["Enums"]["course_status"] | null
           subtopic: string | null
+          subtopic_id: string | null
           tags: string[]
           topic_id: string | null
           type: Database["public"]["Enums"]["question_type"]
         }
         Insert: {
           alternative_solutions?: string | null
+          archived_at?: string | null
           body: string
           chapter_id?: string | null
           correct_text?: string | null
@@ -1233,15 +1306,18 @@ export type Database = {
           lesson_id?: string | null
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
+          scheduled_at?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["course_status"] | null
           subtopic?: string | null
+          subtopic_id?: string | null
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
         }
         Update: {
           alternative_solutions?: string | null
+          archived_at?: string | null
           body?: string
           chapter_id?: string | null
           correct_text?: string | null
@@ -1257,9 +1333,11 @@ export type Database = {
           lesson_id?: string | null
           points?: number
           question_type?: Database["public"]["Enums"]["lesson_type"] | null
+          scheduled_at?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["course_status"] | null
           subtopic?: string | null
+          subtopic_id?: string | null
           tags?: string[]
           topic_id?: string | null
           type?: Database["public"]["Enums"]["question_type"]
@@ -1284,6 +1362,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
             referencedColumns: ["id"]
           },
           {
@@ -1365,6 +1450,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subtopics: {
+        Row: {
+          created_at: string
+          id: string
+          slug: string
+          sort_order: number | null
+          title: string
+          topic_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          slug: string
+          sort_order?: number | null
+          title: string
+          topic_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          slug?: string
+          sort_order?: number | null
+          title?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtopics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       testimonials: {
         Row: {
@@ -1535,13 +1655,25 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_permission: {
+        Args: { _action: string; _resource: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1554,7 +1686,16 @@ export type Database = {
     }
     Enums: {
       access_type: "free" | "paid" | "subscription"
-      app_role: "student" | "instructor" | "admin" | "super_admin"
+      app_role:
+        | "student"
+        | "instructor"
+        | "admin"
+        | "super_admin"
+        | "content_manager"
+        | "exam_manager"
+        | "support_manager"
+        | "financial_manager"
+        | "seo_manager"
       chemistry_grade: "grade_10" | "grade_11" | "grade_12" | "konkur"
       course_status: "draft" | "published" | "archived"
       difficulty: "beginner" | "intermediate" | "advanced"
@@ -1692,7 +1833,17 @@ export const Constants = {
   public: {
     Enums: {
       access_type: ["free", "paid", "subscription"],
-      app_role: ["student", "instructor", "admin", "super_admin"],
+      app_role: [
+        "student",
+        "instructor",
+        "admin",
+        "super_admin",
+        "content_manager",
+        "exam_manager",
+        "support_manager",
+        "financial_manager",
+        "seo_manager",
+      ],
       chemistry_grade: ["grade_10", "grade_11", "grade_12", "konkur"],
       course_status: ["draft", "published", "archived"],
       difficulty: ["beginner", "intermediate", "advanced"],

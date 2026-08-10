@@ -1,0 +1,11 @@
+-- Revoke from PUBLIC for all security definer functions
+REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_admin(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_staff(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_permission(uuid, text, text) FROM PUBLIC;
+
+-- Re-grant to authorized roles
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_staff(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.check_permission(uuid, text, text) TO authenticated, service_role;

@@ -18,6 +18,7 @@ const GROUPS: { title: string; links: { label: string; to: string }[] }[] = [
     links: [
       { label: "همه دوره‌ها", to: "/courses" },
       { label: "مقالات", to: "/articles" },
+      { label: "اتصال هوش مصنوعی", to: "/connect" },
       { label: "داشبورد", to: "/dashboard" },
       { label: "درباره ما", to: "/about" },
     ],

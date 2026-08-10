@@ -362,9 +362,15 @@ function AdminCurriculum() {
               </div>
             </div>
             
-             <div className="p-8 rounded-2xl bg-muted/10 border-2 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground">
-               <Plus className="size-8 mb-4" />
-               <p className="text-sm">مدیریت موضوعات و دروس بزودی در این بخش در دسترس خواهد بود.</p>
+             <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20">
+               <h3 className="font-bold text-primary mb-2">مدیریت سلسله‌مراتب</h3>
+               <p className="text-xs">در این بخش می‌توانید موضوعات و زیرمجموعه‌ها را مدیریت کنید.</p>
+               <div className="flex gap-2 mt-4">
+                 <Button size="sm" variant="outline" onClick={() => {
+                   const title = prompt('عنوان موضوع جدید:');
+                   if (title) adminUpsertTopic({ data: { title, sort_order: (curriculum?.topics?.length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                 }}>افزودن موضوع</Button>
+               </div>
              </div>
          </div>
        )}

@@ -386,7 +386,7 @@ function AdminCurriculum() {
               <div className="space-y-4">
                 {curriculum?.chapters?.map(ch => (
                   <div key={ch.id} className="space-y-2">
-                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors group">
                       <span className="font-bold text-sm">{ch.title}</span>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
@@ -394,26 +394,34 @@ function AdminCurriculum() {
                           const title = prompt('عنوان موضوع جدید:');
                           if (title) adminUpsertTopic({ data: { title, chapter_id: ch.id, sort_order: (curriculum?.topics?.filter(t => t.chapter_id === ch.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
                         }}>+ موضوع</Button>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          if (confirm('حذف فصل و تمام محتویات آن؟')) adminDeleteChapter({ data: { id: ch.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                        }}><Trash2 className="size-3" /></Button>
                       </div>
                     </div>
                     
                     <div className="mr-6 space-y-2 border-r pr-4">
                       {curriculum?.topics?.filter(t => t.chapter_id === ch.id).map(topic => (
                         <div key={topic.id} className="space-y-2">
-                          <div className="p-3 rounded-lg border bg-muted/30 flex items-center justify-between text-xs">
+                          <div className="p-3 rounded-lg border bg-muted/30 flex items-center justify-between text-xs group">
                             <span className="font-bold">{topic.title}</span>
-                            <Button size="sm" variant="ghost" className="h-6 text-[9px]" onClick={() => {
-                              const title = prompt('عنوان زیرمجموعه جدید:');
-                              if (title) adminUpsertSubtopic({ data: { title, topic_id: topic.id, slug: title.toLowerCase().replace(/ /g, '-'), sort_order: (curriculum?.subtopics?.filter(s => s.topic_id === topic.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
-                            }}>+ زیرمجموعه</Button>
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" variant="ghost" className="h-6 text-[9px]" onClick={() => {
+                                const title = prompt('عنوان زیرمجموعه جدید:');
+                                if (title) adminUpsertSubtopic({ data: { title, topic_id: topic.id, slug: title.toLowerCase().replace(/ /g, '-'), sort_order: (curriculum?.subtopics?.filter(s => s.topic_id === topic.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                              }}>+ زیرمجموعه</Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                                if (confirm('حذف موضوع؟')) adminDeleteTopic({ data: { id: topic.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                              }}><Trash2 className="size-3" /></Button>
+                            </div>
                           </div>
                           
                           <div className="mr-4 space-y-1 border-r pr-3">
                             {curriculum?.subtopics?.filter(s => s.topic_id === topic.id).map(sub => (
-                              <div key={sub.id} className="p-2 rounded border bg-white flex items-center justify-between text-[10px]">
+                              <div key={sub.id} className="p-2 rounded border bg-white flex items-center justify-between text-[10px] group">
                                 <span>{sub.title}</span>
                                 <div className="flex items-center gap-1">
-                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive" onClick={() => {
+                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
                                     if (confirm('حذف شود؟')) adminDeleteSubtopic({ data: { id: sub.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
                                   }}><Trash2 className="size-3" /></Button>
                                 </div>
@@ -426,6 +434,7 @@ function AdminCurriculum() {
                   </div>
                 ))}
               </div>
+
             </div>
             
             <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20 sticky top-4 h-fit">

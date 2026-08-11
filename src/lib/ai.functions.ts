@@ -37,15 +37,23 @@ export const chatWithAI = createServerFn({ method: "POST" })
       content: data.message,
     } as any);
     
-    const msg = data.message.toLowerCase();
-    let response = "ببخشید، من هنوز در حال یادگیری مفاهیم پیشرفته شیمی هستم. اما می‌تونم در مورد مسائل پایه بهت کمک کنم.";
+    // Implementation of AI logic with grounding
+    const { getCurriculumContext } = await import("./ai-grounding.server");
+    const curriculumContext = await getCurriculumContext(data.message);
     
-    if (msg.includes("غلظت") || msg.includes("مول")) {
+    // In a real production scenario, we would send this context to a LLM (like GPT-4o) via AI Gateway.
+    // For now, we simulate a curriculum-aware response.
+    const msg = data.message.toLowerCase();
+    let response = "من به عنوان دستیار شیمی ادیورَنک اینجا هستم تا به شما کمک کنم. ";
+    
+    if (curriculumContext.length > 50) {
+      response += "بر اساس منابع درسی ما:\n" + curriculumContext.substring(0, 500);
+    } else if (msg.includes("غلظت") || msg.includes("مول")) {
       response = "غلظت مولی (M) یکی از مهم‌ترین مفاهیم شیمی است. فرمول آن M = n / V است، که n تعداد مول حل‌شونده و V حجم محلول به لیتر است.";
     } else if (msg.includes("اسید") || msg.includes("ph")) {
       response = "pH مقیاسی برای سنجش میزان اسیدی یا بازی بودن یک محلول است. محلول‌های با pH کمتر از ۷ اسیدی و بیشتر از ۷ بازی هستند.";
-    } else if (msg.includes("سلام") || msg.includes("خوبی")) {
-      response = "سلام! من عالی هستم و آماده‌ام تا بهت کمک کنم شیمی رو بهتر یاد بگیری. چه مبحثی رو امروز با هم بخونیم؟";
+    } else {
+      response += "چه مبحثی از شیمی دهم، یازدهم یا دوازدهم مد نظر شماست؟";
     }
     
     const { data: savedMsg } = await supabaseAdmin.from("ai_tutor_messages").insert({

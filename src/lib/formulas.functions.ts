@@ -10,7 +10,7 @@ export const getFormulas = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let query = (supabaseAdmin.from("formulas") as any).select("*, topics(title)");
+    let query = (supabaseAdmin as any).from("formulas").select("*, topics(title)");
     
     if (data.grade) query = query.eq("grade", data.grade);
     if (data.topicId) query = query.eq("topic_id", data.topicId);

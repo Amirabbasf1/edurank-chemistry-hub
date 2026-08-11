@@ -4,13 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getProducts = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("products").select("*").eq("is_active", true);
-  return data ?? [];
+  const { data } = await (supabaseAdmin.from("products") as any).select("*").eq("is_active", true);
+  return (data as any[]) ?? [];
 });
 
 export const createOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { productId: string; couponCode?: string }) => 
+  .inputValidator((data: unknown) => 
     z.object({
       productId: z.string().uuid(),
       couponCode: z.string().optional()
@@ -20,14 +20,14 @@ export const createOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
 
-    const { data: product } = await supabaseAdmin.from("products").select("*").eq("id", data.productId).single();
+    const { data: product } = await (supabaseAdmin.from("products") as any).select("*").eq("id", data.productId).single();
     if (!product) throw new Error("Product not found");
 
-    const { data: order, error } = await supabaseAdmin.from("orders").insert({
+    const { data: order, error } = await (supabaseAdmin.from("orders") as any).insert({
       user_id: userId,
-      total_amount: product.price,
+      total_amount: (product as any).price,
       status: 'pending',
-    } as any).select().single();
+    }).select().single();
 
     if (error) throw error;
     return order;

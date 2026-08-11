@@ -920,7 +920,15 @@ function AdminArticles() {
                 <TableCell className="font-bold text-xs">{a.title}</TableCell>
                 <TableCell className="text-xs">{a.author_name}</TableCell>
                 <TableCell><Badge className="text-[10px]">{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingArticle(a); setIsDialogOpen(true); }}>ویرایش</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                      if (confirm('حذف مقاله؟')) supabase.from('articles').delete().eq('id', a.id).then(() => queryClient.invalidateQueries({ queryKey: ['admin-articles'] }));
+                    }}><Trash2 className="size-4" /></Button>
+                  </div>
+                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>

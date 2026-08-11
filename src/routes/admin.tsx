@@ -815,7 +815,11 @@ function AdminExams() {
                   <Input type="number" placeholder="تعداد" className="w-20" id="smart_count" />
                   <Button type="button" size="sm" onClick={() => {
                     const count = Number((document.getElementById('smart_count') as HTMLInputElement).value);
-                    if (!count) return toast.error('تعداد را وارد کنید');
+                    if (!count) {
+                      toast.error('تعداد را وارد کنید');
+                      return;
+                    }
+
                     adminSmartGenerateQuestions({ data: { count } }).then(ids => {
                       setSelectedQuestions([...selectedQuestions, ...ids]);
                       toast.success('سوالات اضافه شدند');

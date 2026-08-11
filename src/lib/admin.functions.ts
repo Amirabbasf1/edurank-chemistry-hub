@@ -24,21 +24,6 @@ export const adminGetUsers = createServerFn({ method: "GET" })
     return data;
   });
 
-export const adminSmartGenerateQuestions = createServerFn({ method: "POST" })
-  .inputValidator((data: { count: number; grade?: string; difficulty?: string }) => data)
-  .handler(async ({ data }) => {
-    let query = supabase.from("questions").select("id");
-    if (data.grade) query = query.eq("grade", data.grade);
-    if (data.difficulty) query = query.eq("difficulty", data.difficulty);
-    
-    const { data: qs, error } = await query.limit(data.count * 3);
-    if (error) throw error;
-    if (!qs || qs.length === 0) return [];
-    
-    // Simple shuffle
-    const shuffled = qs.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, data.count).map(q => q.id);
-  });
 
 
 export const adminUpdateUserRole = createServerFn({ method: "POST" })

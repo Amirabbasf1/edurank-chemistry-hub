@@ -11,10 +11,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   adminGetCourses, adminCreateCourse, adminUpdateCourse,
   adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic, adminDeleteSubtopic,
+  adminDeleteChapter, adminDeleteTopic,
   adminGetMedia, adminDeleteMedia, adminAddMediaRecord,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
-  adminGetExams, adminUpsertExam,
+  adminGetExams, adminUpsertExam, adminDeleteExam, adminSmartGenerateQuestions,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
   adminGetHomepageSections, adminUpdateHomepageSection,
@@ -23,8 +24,10 @@ import {
   adminGetSiteSettings, adminUpdateSiteSetting,
   adminGetNavigationMenus, adminUpdateNavigationMenu,
   adminGetSystemStats
-
 } from "@/lib/admin.functions";
+
+import { adminDuplicateLesson } from "@/lib/admin-curriculum.functions";
+
 
 import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -383,7 +386,7 @@ function AdminCurriculum() {
               <div className="space-y-4">
                 {curriculum?.chapters?.map(ch => (
                   <div key={ch.id} className="space-y-2">
-                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                    <div className="p-4 rounded-xl border bg-white flex items-center justify-between hover:border-primary/50 transition-colors group">
                       <span className="font-bold text-sm">{ch.title}</span>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">فصل {faNumber(ch.sort_order)}</Badge>
@@ -391,26 +394,34 @@ function AdminCurriculum() {
                           const title = prompt('عنوان موضوع جدید:');
                           if (title) adminUpsertTopic({ data: { title, chapter_id: ch.id, sort_order: (curriculum?.topics?.filter(t => t.chapter_id === ch.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
                         }}>+ موضوع</Button>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          if (confirm('حذف فصل و تمام محتویات آن؟')) adminDeleteChapter({ data: { id: ch.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                        }}><Trash2 className="size-3" /></Button>
                       </div>
                     </div>
                     
                     <div className="mr-6 space-y-2 border-r pr-4">
                       {curriculum?.topics?.filter(t => t.chapter_id === ch.id).map(topic => (
                         <div key={topic.id} className="space-y-2">
-                          <div className="p-3 rounded-lg border bg-muted/30 flex items-center justify-between text-xs">
+                          <div className="p-3 rounded-lg border bg-muted/30 flex items-center justify-between text-xs group">
                             <span className="font-bold">{topic.title}</span>
-                            <Button size="sm" variant="ghost" className="h-6 text-[9px]" onClick={() => {
-                              const title = prompt('عنوان زیرمجموعه جدید:');
-                              if (title) adminUpsertSubtopic({ data: { title, topic_id: topic.id, slug: title.toLowerCase().replace(/ /g, '-'), sort_order: (curriculum?.subtopics?.filter(s => s.topic_id === topic.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
-                            }}>+ زیرمجموعه</Button>
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" variant="ghost" className="h-6 text-[9px]" onClick={() => {
+                                const title = prompt('عنوان زیرمجموعه جدید:');
+                                if (title) adminUpsertSubtopic({ data: { title, topic_id: topic.id, slug: title.toLowerCase().replace(/ /g, '-'), sort_order: (curriculum?.subtopics?.filter(s => s.topic_id === topic.id).length || 0) + 1 } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                              }}>+ زیرمجموعه</Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                                if (confirm('حذف موضوع؟')) adminDeleteTopic({ data: { id: topic.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
+                              }}><Trash2 className="size-3" /></Button>
+                            </div>
                           </div>
                           
                           <div className="mr-4 space-y-1 border-r pr-3">
                             {curriculum?.subtopics?.filter(s => s.topic_id === topic.id).map(sub => (
-                              <div key={sub.id} className="p-2 rounded border bg-white flex items-center justify-between text-[10px]">
+                              <div key={sub.id} className="p-2 rounded border bg-white flex items-center justify-between text-[10px] group">
                                 <span>{sub.title}</span>
                                 <div className="flex items-center gap-1">
-                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive" onClick={() => {
+                                  <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
                                     if (confirm('حذف شود؟')) adminDeleteSubtopic({ data: { id: sub.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-curriculum', selectedCourse] }));
                                   }}><Trash2 className="size-3" /></Button>
                                 </div>
@@ -423,6 +434,7 @@ function AdminCurriculum() {
                   </div>
                 ))}
               </div>
+
             </div>
             
             <div className="p-8 rounded-2xl border bg-white flex flex-col items-center justify-center text-center text-muted-foreground border-primary/20 sticky top-4 h-fit">
@@ -712,13 +724,58 @@ function AdminExams() {
               title: fd.get('title'),
               slug: fd.get('slug'),
               duration_minutes: Number(fd.get('duration')),
+              passing_score: Number(fd.get('passing_score')),
+              exam_type: fd.get('type'),
+              negative_marking: fd.get('negative_marking') === 'on',
+              randomize_questions: fd.get('randomize_questions') === 'on',
+              randomize_options: fd.get('randomize_options') === 'on',
+              status: fd.get('status'),
               is_published: fd.get('published') === 'on'
             });
+
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className="text-xs font-bold">عنوان آزمون</label><Input name="title" defaultValue={editingExam?.title} required /></div>
               <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingExam?.slug} required /></div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">زمان (دقیقه)</label>
+                <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">حداقل نمره قبولی (%)</label>
+                <Input name="passing_score" type="number" defaultValue={editingExam?.passing_score || 50} />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-bold">نوع آزمون</label>
+                 <Select name="type" defaultValue={editingExam?.exam_type || 'regular'}>
+                   <SelectTrigger><SelectValue /></SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="regular">معمولی</SelectItem>
+                     <SelectItem value="konkur">شبیه‌ساز کنکور</SelectItem>
+                     <SelectItem value="diagnostic">تعیین سطح</SelectItem>
+                   </SelectContent>
+                 </Select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 p-4 border rounded-xl bg-muted/5">
+              <div className="flex items-center gap-2">
+                <Checkbox id="neg_marking" name="negative_marking" defaultChecked={editingExam?.negative_marking} />
+                <label htmlFor="neg_marking" className="text-xs font-bold">نمره منفی</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="rand_q" name="randomize_questions" defaultChecked={editingExam?.randomize_questions} />
+                <label htmlFor="rand_q" className="text-xs font-bold">تصادفی‌سازی سوالات</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="rand_o" name="randomize_options" defaultChecked={editingExam?.randomize_options} />
+                <label htmlFor="rand_o" className="text-xs font-bold">تصادفی‌سازی گزینه‌ها</label>
+              </div>
+            </div>
+
             
             <div className="space-y-4 border p-4 rounded-xl bg-muted/5">
               <h3 className="font-black text-sm flex items-center gap-2"><ClipboardList className="size-4" /> انتخاب سؤالات</h3>
@@ -750,17 +807,47 @@ function AdminExams() {
                 </div>
               </div>
             </div>
+            <div className="flex gap-4 p-4 border rounded-xl bg-primary/5">
+
+              <div className="flex-1 space-y-2">
+                <label className="text-xs font-bold">تولید هوشمند سوال</label>
+                <div className="flex gap-2">
+                  <Input type="number" placeholder="تعداد" className="w-20" id="smart_count" />
+                  <Button type="button" size="sm" onClick={() => {
+                    const count = Number((document.getElementById('smart_count') as HTMLInputElement).value);
+                    if (!count) {
+                      toast.error('تعداد را وارد کنید');
+                      return;
+                    }
+
+                    adminSmartGenerateQuestions({ data: { count } }).then((ids: any) => {
+                      setSelectedQuestions([...selectedQuestions, ...ids]);
+                      toast.success('سوالات اضافه شدند');
+                    }).catch((e: any) => toast.error(e.message));
+                  }}>تولید خودکار</Button>
+
+                </div>
+              </div>
+            </div>
+
 
             <div className="flex items-center gap-4">
-               <div className="flex-1 space-y-2">
-                 <label className="text-xs font-bold">مدت زمان (دقیقه)</label>
-                 <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+               <div className="flex items-center gap-2">
+                 <Select name="status" defaultValue={editingExam?.status || 'draft'}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">پیش‌نویس</SelectItem>
+                      <SelectItem value="published">منتشر شده</SelectItem>
+                      <SelectItem value="archived">آرشیو</SelectItem>
+                    </SelectContent>
+                 </Select>
                </div>
-               <div className="flex items-center gap-2 mt-6">
-                 <input type="checkbox" name="published" defaultChecked={editingExam?.is_published} />
-                 <label className="text-xs font-bold">انتشار عمومی</label>
+               <div className="flex items-center gap-2">
+                 <Checkbox id="is_published_legacy" name="published" defaultChecked={editingExam?.is_published} />
+                 <label htmlFor="is_published_legacy" className="text-xs font-bold">نمایش در لیست</label>
                </div>
             </div>
+
             
             <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره نهایی آزمون</Button></DialogFooter>
           </form>
@@ -807,9 +894,14 @@ function AdminArticles() {
                 slug: fd.get('slug'),
                 excerpt: fd.get('excerpt'),
                 content: fd.get('content'),
+                category: fd.get('category'),
+                featured_image: fd.get('featured_image'),
+                seo_title: fd.get('seo_title'),
+                meta_description: fd.get('meta_description'),
                 author_name: 'مدیریت',
                 is_published: fd.get('published') === 'on'
               });
+
             }}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -825,6 +917,23 @@ function AdminArticles() {
                 <label className="text-xs font-bold">خلاصه مقاله</label>
                 <Input name="excerpt" defaultValue={editingArticle?.excerpt} />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">دسته‌بندی</label>
+                  <Select name="category" defaultValue={editingArticle?.category}>
+                    <SelectTrigger><SelectValue placeholder="انتخاب..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chemistry">شیمی دهم</SelectItem>
+                      <SelectItem value="news">اخبار کنکور</SelectItem>
+                      <SelectItem value="study">مشاوره تحصیلی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">لینک تصویر شاخص</label>
+                  <Input name="featured_image" defaultValue={editingArticle?.featured_image} placeholder="https://..." />
+                </div>
+              </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold">متن محتوا (Markdown)</label>
                 <textarea 
@@ -834,10 +943,30 @@ function AdminArticles() {
                   required
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" name="published" defaultChecked={editingArticle?.is_published} />
-                <label className="text-xs font-bold">انتشار فوری</label>
-              </div>
+
+              <Tabs defaultValue="content" className="w-full">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="content">محتوا</TabsTrigger>
+                  <TabsTrigger value="seo">تنظیمات سئو</TabsTrigger>
+                </TabsList>
+                <TabsContent value="content" className="space-y-4 pt-4">
+                   <div className="flex items-center gap-2">
+                    <Checkbox id="pub_article" name="published" defaultChecked={editingArticle?.is_published} />
+                    <label htmlFor="pub_article" className="text-xs font-bold">انتشار فوری</label>
+                  </div>
+                </TabsContent>
+                <TabsContent value="seo" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold">عنوان سئو (SEO Title)</label>
+                    <Input name="seo_title" defaultValue={editingArticle?.seo_title} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold">توضیحات متا (Meta Description)</label>
+                    <Textarea name="meta_description" defaultValue={editingArticle?.meta_description} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
               <DialogFooter>
                 <Button type="submit" className="w-full font-bold">ذخیره و انتشار</Button>
               </DialogFooter>
@@ -863,7 +992,15 @@ function AdminArticles() {
                 <TableCell className="font-bold text-xs">{a.title}</TableCell>
                 <TableCell className="text-xs">{a.author_name}</TableCell>
                 <TableCell><Badge className="text-[10px]">{a.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm" className="text-xs">ویرایش</Button></TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingArticle(a); setIsDialogOpen(true); }}>ویرایش</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                      if (confirm('حذف مقاله؟')) supabase.from('articles').delete().eq('id', a.id).then(() => queryClient.invalidateQueries({ queryKey: ['admin-articles'] }));
+                    }}><Trash2 className="size-4" /></Button>
+                  </div>
+                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>
@@ -874,27 +1011,59 @@ function AdminArticles() {
 }
 
 function AdminHomepage() {
+  const queryClient = useQueryClient();
   const { data: sections } = useQuery({ queryKey: ['admin-homepage'], queryFn: adminGetHomepageSections });
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <h2 className="text-xl font-black">مدیریت صفحه اصلی</h2>
       <div className="grid gap-4">
-        {sections?.map(s => (
-          <div key={s.id} className="p-6 rounded-2xl border flex items-center justify-between hover:bg-muted/5 transition-colors">
-            <div>
-              <h3 className="font-bold">{s.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{s.section_slug}</p>
+        {sections?.map(s => {
+          const content = s.content as any;
+          return (
+            <div key={s.id} className="p-6 rounded-2xl border flex items-center justify-between hover:bg-muted/5 transition-colors">
+              <div>
+                <h3 className="font-bold">{s.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{s.section_slug}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={s.is_active ? 'default' : 'secondary'}>{s.is_active ? 'فعال' : 'غیرفعال'}</Badge>
+                <Dialog>
+                  <DialogTrigger asChild><Button variant="outline" size="sm">ویرایش محتوا</Button></DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]" dir="rtl">
+                    <DialogHeader><DialogTitle>ویرایش بخش: {s.title}</DialogTitle></DialogHeader>
+                    <form className="space-y-4 py-4" onSubmit={(e) => {
+                      e.preventDefault();
+                      const fd = new FormData(e.currentTarget);
+                      adminUpdateHomepageSection({ 
+                        data: { 
+                          id: s.id, 
+                          updates: { 
+                            title: fd.get('title'),
+                            content: { ...content, description: fd.get('description') },
+                            is_active: fd.get('active') === 'on'
+                          } 
+                        } 
+                      }).then(() => {
+                        queryClient.invalidateQueries({ queryKey: ['admin-homepage'] });
+                        toast.success('تغییرات ذخیره شد');
+                      });
+                    }}>
+                      <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={s.title} /></div>
+                      <div className="space-y-2"><label className="text-xs font-bold">توضیحات</label><Textarea name="description" defaultValue={content?.description || ''} /></div>
+                      <div className="flex items-center gap-2"><Checkbox name="active" defaultChecked={!!s.is_active} /> <label className="text-xs font-bold">بخش فعال باشد</label></div>
+                      <Button type="submit" className="w-full">ذخیره تغییرات</Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={s.is_active ? 'default' : 'secondary'}>{s.is_active ? 'فعال' : 'غیرفعال'}</Badge>
-              <Button variant="outline" size="sm">ویرایش محتوا</Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 function AdminLessons() {
   const queryClient = useQueryClient();
@@ -949,7 +1118,21 @@ function AdminLessons() {
                   <TableRow key={l.id}>
                     <TableCell className="font-bold">{l.title}</TableCell>
                     <TableCell><Badge variant="outline">{l.type}</Badge></TableCell>
-                    <TableCell><Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          adminDuplicateLesson({ data: { id: l.id } }).then(() => {
+                            queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] });
+                            toast.success('درس کپی شد');
+                          });
+                        }}><Copy className="size-4" /></Button>
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                          if (confirm('حذف درس؟')) adminDeleteLesson({ data: { id: l.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] }));
+                        }}><Trash2 className="size-4" /></Button>
+                      </div>
+                    </TableCell>
+
                   </TableRow>
                 ))
               }
@@ -978,8 +1161,11 @@ function AdminLessons() {
               chapter_id: chapterId || null,
               topic_id: topicId || null,
               subtopic_id: subtopicId || null,
+              estimated_time: Number(fd.get('estimated_time')),
+              status: fd.get('status'),
               is_free_preview: fd.get('is_free') === 'on'
             });
+
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={editingLesson?.title} required /></div>
@@ -1033,8 +1219,27 @@ function AdminLessons() {
               <label className="text-xs font-bold">محتوای متنی (Rich-text Markdown)</label>
               <textarea name="content" className="w-full min-h-[200px] border p-3 rounded-lg text-sm" defaultValue={editingLesson?.content} />
             </div>
-            <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">زمان تخمینی مطالعه (دقیقه)</label>
+                <Input name="estimated_time" type="number" defaultValue={editingLesson?.estimated_time || 0} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">وضعیت انتشار</label>
+                <Select name="status" defaultValue={editingLesson?.status || 'draft'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">پیش‌نویس</SelectItem>
+                    <SelectItem value="published">منتشر شده</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            </div>
             <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره درس</Button></DialogFooter>
+
           </form>
         </DialogContent>
       </Dialog>
@@ -1236,20 +1441,52 @@ function AdminSEO() {
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <h2 className="text-xl font-black">مدیریت سئو سراسری</h2>
-      <div className="grid gap-6 max-w-2xl">
-        <div className="space-y-2">
-          <label className="text-xs font-bold">عنوان سایت</label>
-          <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><Search className="size-4" /> تنظیمات سئو سراسری</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">عنوان سایت (Suffix)</label>
+              <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">توضیحات متا سایت</label>
+              <Textarea className="min-h-[100px]" defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">کلمات کلیدی سراسری</label>
+              <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><Monitor className="size-4" /> تنظیمات شبکه‌های اجتماعی (OG)</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">تصویر OpenGraph سراسری (URL)</label>
+              <Input defaultValue={getVal('og_image') as string} onBlur={e => mutation.mutate({ key: 'og_image', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">نام برند در شبکه‌های اجتماعی</label>
+              <Input defaultValue={getVal('og_site_name') as string} onBlur={e => mutation.mutate({ key: 'og_site_name', value: e.target.value })} />
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold">توضیحات سایت (Meta Description)</label>
-          <Textarea defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold">کلمات کلیدی (جدا شده با کاما)</label>
-          <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+
+        <div className="space-y-6">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><ShieldAlert className="size-4" /> تنظیمات روبات‌ها و ایندکس</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">فایل Robots.txt</label>
+              <Textarea className="min-h-[100px] font-mono text-[10px]" defaultValue={getVal('robots_txt') as string || 'User-agent: *\nAllow: /'} onBlur={e => mutation.mutate({ key: 'robots_txt', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">کد Google Analytics (G-XXXXX)</label>
+              <Input defaultValue={getVal('google_analytics_id') as string} onBlur={e => mutation.mutate({ key: 'google_analytics_id', value: e.target.value })} />
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
   );
 }

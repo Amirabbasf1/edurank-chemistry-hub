@@ -24,6 +24,8 @@ export const adminGetUsers = createServerFn({ method: "GET" })
     return data;
   });
 
+
+
 export const adminUpdateUserRole = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string; roles: string[] }) => data)
   .handler(async ({ data }) => {
@@ -127,6 +129,22 @@ export const adminGetLessons = createServerFn({ method: "GET" })
     return lessons;
   });
 
+export const adminDeleteChapter = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("chapters").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const adminDeleteTopic = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { error } = await supabase.from("topics").delete().eq("id", data.id);
+    if (error) throw error;
+    return { success: true };
+  });
+
 export const adminDeleteSubtopic = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
@@ -134,6 +152,7 @@ export const adminDeleteSubtopic = createServerFn({ method: "POST" })
     if (error) throw error;
     return { success: true };
   });
+
 
 export const adminUpsertLesson = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
@@ -263,12 +282,17 @@ export const adminUpsertExam = createServerFn({ method: "POST" })
     await supabase.from("exam_questions").delete().eq("exam_id", ex.id);
     if (data.questionIds.length > 0) {
       await supabase.from("exam_questions").insert(
-        data.questionIds.map((qid, idx) => ({ exam_id: ex.id, question_id: qid, sort_order: idx }))
+        data.questionIds.map((qid, idx) => ({ 
+          exam_id: ex.id, 
+          question_id: qid, 
+          sort_order: idx + 1 
+        }))
       );
     }
     
     return ex;
   });
+
 
 export const adminDeleteExam = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)

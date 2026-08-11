@@ -35,7 +35,7 @@ const signUpSchema = signInSchema.extend({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, roles, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 

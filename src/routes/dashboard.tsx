@@ -29,13 +29,14 @@ function DashboardPage() {
     queryKey: ["dashboard", user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
-      const [profile, enrollments, attempts, mastery, mistakes, notifications] = await Promise.all([
+      const [profile, enrollments, attempts, mastery, mistakes, notifications, spaced] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle(),
-        supabase.from("enrollments").select("*, courses(title, slug)").eq("user_id", user!.id),
-        supabase.from("exam_attempts").select("*, exams(title, slug)").eq("user_id", user!.id).order("started_at", { ascending: false }).limit(10),
-        supabase.from("topic_mastery").select("*, topics(*)").eq("user_id", user!.id).order("mastery_score", { ascending: false }),
-        supabase.from("mistake_notebook").select("*, questions(*, topics(*))").eq("user_id", user!.id).eq("is_resolved", false).limit(5),
+        supabase.from("enrollments").select("*, courses(title, slug, thumbnail_url, lesson_count)").eq("user_id", user!.id),
+        supabase.from("exam_attempts").select("*, exams(title, slug)").eq("user_id", user!.id).order("started_at", { ascending: false }).limit(5),
+        supabase.from("topic_mastery").select("*, topics(title, id)").eq("user_id", user!.id).order("mastery_score", { ascending: false }).limit(5),
+        supabase.from("mistake_notebook").select("*, questions(id, body, topics(title))").eq("user_id", user!.id).eq("is_resolved", false).limit(5),
         supabase.from("notifications").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(5),
+        supabase.from("spaced_reviews").select("*").eq("user_id", user!.id).lte("next_review_at", new Date().toISOString()),
       ]);
       return { 
         profile: profile.data, 
@@ -43,7 +44,8 @@ function DashboardPage() {
         attempts: attempts.data ?? [],
         mastery: mastery.data ?? [],
         mistakes: mistakes.data ?? [],
-        notifications: notifications.data ?? []
+        notifications: notifications.data ?? [],
+        spacedReviews: spaced.data ?? []
       };
     },
   });

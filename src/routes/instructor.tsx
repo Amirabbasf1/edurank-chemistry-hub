@@ -229,7 +229,7 @@ function InstructorQuestions() {
         <div>در حال بارگذاری...</div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {questions?.map(q => (
+          {questions?.map((q: any) => (
             <Card key={q.id} className="p-4 space-y-3">
               <div className="flex items-start justify-between">
                 <div className="font-bold flex-1 text-right">{q.body}</div>
@@ -279,7 +279,7 @@ function InstructorExams() {
         <div>در حال بارگذاری...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {exams?.map(e => (
+          {exams?.map((e: any) => (
             <Card key={e.id} className="p-6 text-right space-y-4">
               <h3 className="font-black text-lg">{e.title}</h3>
               <div className="space-y-1 text-sm text-slate-500 font-bold">
@@ -340,7 +340,7 @@ function InstructorStudents() {
               </tr>
             </thead>
             <tbody>
-              {enrollments?.map(en => (
+              {enrollments?.map((en: any) => (
                 <tr key={en.id} className="border-b last:border-0 hover:bg-slate-50/50 transition">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">

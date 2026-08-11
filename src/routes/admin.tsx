@@ -806,7 +806,23 @@ function AdminExams() {
                   })}
                 </div>
               </div>
+            <div className="flex gap-4 p-4 border rounded-xl bg-primary/5">
+              <div className="flex-1 space-y-2">
+                <label className="text-xs font-bold">تولید هوشمند سوال</label>
+                <div className="flex gap-2">
+                  <Input type="number" placeholder="تعداد" className="w-20" id="smart_count" />
+                  <Button type="button" size="sm" onClick={() => {
+                    const count = Number((document.getElementById('smart_count') as HTMLInputElement).value);
+                    if (!count) return toast.error('تعداد را وارد کنید');
+                    adminSmartGenerateQuestions({ data: { count } }).then(ids => {
+                      setSelectedQuestions([...selectedQuestions, ...ids]);
+                      toast.success('سوالات اضافه شدند');
+                    }).catch(e => toast.error(e.message));
+                  }}>تولید خودکار</Button>
+                </div>
+              </div>
             </div>
+
 
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2">

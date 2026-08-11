@@ -280,12 +280,17 @@ export const adminUpsertExam = createServerFn({ method: "POST" })
     await supabase.from("exam_questions").delete().eq("exam_id", ex.id);
     if (data.questionIds.length > 0) {
       await supabase.from("exam_questions").insert(
-        data.questionIds.map((qid, idx) => ({ exam_id: ex.id, question_id: qid, sort_order: idx }))
+        data.questionIds.map((qid, idx) => ({ 
+          exam_id: ex.id, 
+          question_id: qid, 
+          sort_order: idx + 1 
+        }))
       );
     }
     
     return ex;
   });
+
 
 export const adminDeleteExam = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)

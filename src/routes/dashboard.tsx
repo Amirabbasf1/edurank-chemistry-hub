@@ -183,13 +183,27 @@ function DashboardPage() {
           <aside className="space-y-8">
             <section className="card-surface p-6 bg-primary/5 border-primary/20">
               <h2 className="text-sm font-bold flex items-center gap-2 mb-4">
-                <Zap className="size-4 text-primary" /> پیشنهاد هوشمند
+                <Zap className="size-4 text-primary" /> برنامه امروز شما
               </h2>
-              <p className="text-xs leading-6 text-muted-foreground">
-                بر اساس عملکرد شما، پیشنهاد می‌کنیم فصل <span className="font-bold text-foreground">استوکیومتری</span> را مرور کنید.
-              </p>
+              <div className="space-y-3">
+                {data?.spacedReviews && data.spacedReviews.length > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span>مرورهای زمان‌دار (SRS)</span>
+                    <Badge variant="secondary" className="bg-primary/20 text-primary">{faNumber(data.spacedReviews.length)} مورد</Badge>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-xs">
+                  <span>اشتباهات نیاز به بررسی</span>
+                  <Badge variant="secondary" className="bg-destructive/10 text-destructive">{faNumber(data?.mistakes?.length ?? 0)} مورد</Badge>
+                </div>
+                {data?.mastery && data.mastery.length > 0 && (
+                  <p className="text-[10px] leading-5 text-muted-foreground mt-2 border-t pt-2">
+                    بر اساس عملکرد شما، پیشنهاد می‌کنیم مبحث <span className="font-bold text-foreground">{data.mastery[data.mastery.length - 1]?.topics?.title || "استوکیومتری"}</span> را مرور کنید.
+                  </p>
+                )}
+              </div>
               <Link to="/courses">
-                <Button size="sm" className="mt-4 w-full">شروع مرور</Button>
+                <Button size="sm" className="mt-4 w-full">شروع مطالعه امروز</Button>
               </Link>
             </section>
 

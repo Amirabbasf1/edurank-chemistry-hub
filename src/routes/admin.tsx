@@ -871,9 +871,14 @@ function AdminArticles() {
                 slug: fd.get('slug'),
                 excerpt: fd.get('excerpt'),
                 content: fd.get('content'),
+                category: fd.get('category'),
+                featured_image: fd.get('featured_image'),
+                seo_title: fd.get('seo_title'),
+                meta_description: fd.get('meta_description'),
                 author_name: 'مدیریت',
                 is_published: fd.get('published') === 'on'
               });
+
             }}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

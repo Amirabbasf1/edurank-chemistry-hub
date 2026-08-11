@@ -15,7 +15,7 @@ import {
   adminGetMedia, adminDeleteMedia, adminAddMediaRecord,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
-  adminGetExams, adminUpsertExam, adminDeleteExam,
+  adminGetExams, adminUpsertExam, adminDeleteExam, adminSmartGenerateQuestions,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
   adminGetHomepageSections, adminUpdateHomepageSection,

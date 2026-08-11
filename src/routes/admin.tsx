@@ -820,11 +820,12 @@ function AdminExams() {
                       return;
                     }
 
-                    adminSmartGenerateQuestions({ data: { count } }).then(ids => {
+                    adminSmartGenerateQuestions({ data: { count } }).then((ids: any) => {
                       setSelectedQuestions([...selectedQuestions, ...ids]);
                       toast.success('سوالات اضافه شدند');
-                    }).catch(e => toast.error(e.message));
+                    }).catch((e: any) => toast.error(e.message));
                   }}>تولید خودکار</Button>
+
                 </div>
               </div>
             </div>

@@ -10,8 +10,10 @@ export function parseChemicalFormula(formula: string): Record<string, number> {
   let match;
   while ((match = regex.exec(formula)) !== null) {
     const element = match[1];
-    const count = parseInt(match[2] || "1");
-    result[element] = (result[element] || 0) + count;
+    if (element) {
+      const count = parseInt(match[2] || "1");
+      result[element] = (result[element] || 0) + count;
+    }
   }
   return result;
 }

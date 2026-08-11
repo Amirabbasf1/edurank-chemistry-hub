@@ -961,7 +961,21 @@ function AdminLessons() {
                   <TableRow key={l.id}>
                     <TableCell className="font-bold">{l.title}</TableCell>
                     <TableCell><Badge variant="outline">{l.type}</Badge></TableCell>
-                    <TableCell><Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditingLesson(l); setIsDialogOpen(true); }}>ویرایش</Button>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          adminDuplicateLesson({ data: { id: l.id } }).then(() => {
+                            queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] });
+                            toast.success('درس کپی شد');
+                          });
+                        }}><Copy className="size-4" /></Button>
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                          if (confirm('حذف درس؟')) adminDeleteLesson({ data: { id: l.id } }).then(() => queryClient.invalidateQueries({ queryKey: ['admin-lessons', courseId] }));
+                        }}><Trash2 className="size-4" /></Button>
+                      </div>
+                    </TableCell>
+
                   </TableRow>
                 ))
               }

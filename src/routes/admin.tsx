@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   adminGetCourses, adminCreateCourse, adminUpdateCourse,
   adminGetCurriculum, adminUpsertChapter, adminUpsertTopic, adminUpsertSubtopic, adminDeleteSubtopic,
+  adminDeleteChapter, adminDeleteTopic,
   adminGetMedia, adminDeleteMedia, adminAddMediaRecord,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
@@ -23,9 +24,10 @@ import {
   adminGetSiteSettings, adminUpdateSiteSetting,
   adminGetNavigationMenus, adminUpdateNavigationMenu,
   adminGetSystemStats
-
-
 } from "@/lib/admin.functions";
+
+import { adminDuplicateLesson } from "@/lib/admin-curriculum.functions";
+
 
 import { adminCreateMediaRecord } from "@/lib/admin-media.functions";
 import { supabase } from "@/integrations/supabase/client";

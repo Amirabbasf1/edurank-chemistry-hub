@@ -1059,8 +1059,27 @@ function AdminLessons() {
               <label className="text-xs font-bold">محتوای متنی (Rich-text Markdown)</label>
               <textarea name="content" className="w-full min-h-[200px] border p-3 rounded-lg text-sm" defaultValue={editingLesson?.content} />
             </div>
-            <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">زمان تخمینی مطالعه (دقیقه)</label>
+                <Input name="estimated_time" type="number" defaultValue={editingLesson?.estimated_time || 0} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">وضعیت انتشار</label>
+                <Select name="status" defaultValue={editingLesson?.status || 'draft'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">پیش‌نویس</SelectItem>
+                    <SelectItem value="published">منتشر شده</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2"><input type="checkbox" name="is_free" defaultChecked={editingLesson?.is_free_preview} /> <label className="text-xs font-bold">پیش‌نمایش رایگان</label></div>
+            </div>
             <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره درس</Button></DialogFooter>
+
           </form>
         </DialogContent>
       </Dialog>

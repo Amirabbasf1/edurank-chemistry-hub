@@ -23,8 +23,10 @@ import {
   adminGetPages, adminUpsertPage, adminDeletePage,
   adminGetSiteSettings, adminUpdateSiteSetting,
   adminGetNavigationMenus, adminUpdateNavigationMenu,
-  adminGetSystemStats, adminAssignInstructorToCourse, adminGetCourseInstructors
+  adminGetSystemStats
 } from "@/lib/admin.functions";
+
+import { adminAssignInstructorToCourse, adminGetCourseInstructors } from "@/lib/instructor.functions";
 
 import { instructorGetCourses } from "@/lib/instructor.functions";
 

@@ -806,7 +806,9 @@ function AdminExams() {
                   })}
                 </div>
               </div>
+            </div>
             <div className="flex gap-4 p-4 border rounded-xl bg-primary/5">
+
               <div className="flex-1 space-y-2">
                 <label className="text-xs font-bold">تولید هوشمند سوال</label>
                 <div className="flex gap-2">

@@ -989,7 +989,35 @@ function AdminHomepage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={s.is_active ? 'default' : 'secondary'}>{s.is_active ? 'فعال' : 'غیرفعال'}</Badge>
-              <Button variant="outline" size="sm">ویرایش محتوا</Button>
+              <Dialog>
+                <DialogTrigger asChild><Button variant="outline" size="sm">ویرایش محتوا</Button></DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]" dir="rtl">
+                  <DialogHeader><DialogTitle>ویرایش بخش: {s.title}</DialogTitle></DialogHeader>
+                  <form className="space-y-4 py-4" onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    adminUpdateHomepageSection({ 
+                      data: { 
+                        id: s.id, 
+                        updates: { 
+                          title: fd.get('title'),
+                          description: fd.get('description'),
+                          is_active: fd.get('active') === 'on'
+                        } 
+                      } 
+                    }).then(() => {
+                      queryClient.invalidateQueries({ queryKey: ['admin-homepage'] });
+                      toast.success('تغییرات ذخیره شد');
+                    });
+                  }}>
+                    <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={s.title} /></div>
+                    <div className="space-y-2"><label className="text-xs font-bold">توضیحات</label><Textarea name="description" defaultValue={s.description} /></div>
+                    <div className="flex items-center gap-2"><Checkbox name="active" defaultChecked={s.is_active} /> <label className="text-xs font-bold">بخش فعال باشد</label></div>
+                    <Button type="submit" className="w-full">ذخیره تغییرات</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
             </div>
           </div>
         ))}

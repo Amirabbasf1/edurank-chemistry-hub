@@ -882,6 +882,23 @@ function AdminArticles() {
                 <label className="text-xs font-bold">خلاصه مقاله</label>
                 <Input name="excerpt" defaultValue={editingArticle?.excerpt} />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">دسته‌بندی</label>
+                  <Select name="category" defaultValue={editingArticle?.category}>
+                    <SelectTrigger><SelectValue placeholder="انتخاب..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chemistry">شیمی دهم</SelectItem>
+                      <SelectItem value="news">اخبار کنکور</SelectItem>
+                      <SelectItem value="study">مشاوره تحصیلی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">لینک تصویر شاخص</label>
+                  <Input name="featured_image" defaultValue={editingArticle?.featured_image} placeholder="https://..." />
+                </div>
+              </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold">متن محتوا (Markdown)</label>
                 <textarea 
@@ -891,6 +908,7 @@ function AdminArticles() {
                   required
                 />
               </div>
+
               <div className="flex items-center gap-2">
                 <input type="checkbox" name="published" defaultChecked={editingArticle?.is_published} />
                 <label className="text-xs font-bold">انتشار فوری</label>

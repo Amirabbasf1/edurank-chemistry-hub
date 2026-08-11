@@ -684,6 +684,7 @@ export type Database = {
           grade: string | null
           id: string
           instructions: string | null
+          instructor_id: string | null
           is_published: boolean
           negative_marking: boolean | null
           passing_score: number | null
@@ -711,6 +712,7 @@ export type Database = {
           grade?: string | null
           id?: string
           instructions?: string | null
+          instructor_id?: string | null
           is_published?: boolean
           negative_marking?: boolean | null
           passing_score?: number | null
@@ -738,6 +740,7 @@ export type Database = {
           grade?: string | null
           id?: string
           instructions?: string | null
+          instructor_id?: string | null
           is_published?: boolean
           negative_marking?: boolean | null
           passing_score?: number | null
@@ -840,6 +843,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      instructor_courses: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          course_id: string
+          id: string
+          instructor_id: string
+          status: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          course_id: string
+          id?: string
+          instructor_id: string
+          status?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          course_id?: string
+          id?: string
+          instructor_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
@@ -1071,6 +1109,7 @@ export type Database = {
           filename: string
           id: string
           metadata: Json | null
+          uploader_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1081,6 +1120,7 @@ export type Database = {
           filename: string
           id?: string
           metadata?: Json | null
+          uploader_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1091,6 +1131,7 @@ export type Database = {
           filename?: string
           id?: string
           metadata?: Json | null
+          uploader_id?: string | null
         }
         Relationships: []
       }
@@ -1410,6 +1451,7 @@ export type Database = {
         Row: {
           alternative_solutions: string | null
           archived_at: string | null
+          author_id: string | null
           body: string
           chapter_id: string | null
           chemistry_formula: string | null
@@ -1446,6 +1488,7 @@ export type Database = {
         Insert: {
           alternative_solutions?: string | null
           archived_at?: string | null
+          author_id?: string | null
           body: string
           chapter_id?: string | null
           chemistry_formula?: string | null
@@ -1482,6 +1525,7 @@ export type Database = {
         Update: {
           alternative_solutions?: string | null
           archived_at?: string | null
+          author_id?: string | null
           body?: string
           chapter_id?: string | null
           chemistry_formula?: string | null

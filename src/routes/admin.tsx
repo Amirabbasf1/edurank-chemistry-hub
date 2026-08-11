@@ -802,15 +802,22 @@ function AdminExams() {
             </div>
 
             <div className="flex items-center gap-4">
-               <div className="flex-1 space-y-2">
-                 <label className="text-xs font-bold">مدت زمان (دقیقه)</label>
-                 <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+               <div className="flex items-center gap-2">
+                 <Select name="status" defaultValue={editingExam?.status || 'draft'}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">پیش‌نویس</SelectItem>
+                      <SelectItem value="published">منتشر شده</SelectItem>
+                      <SelectItem value="archived">آرشیو</SelectItem>
+                    </SelectContent>
+                 </Select>
                </div>
-               <div className="flex items-center gap-2 mt-6">
-                 <input type="checkbox" name="published" defaultChecked={editingExam?.is_published} />
-                 <label className="text-xs font-bold">انتشار عمومی</label>
+               <div className="flex items-center gap-2">
+                 <Checkbox id="is_published_legacy" name="published" defaultChecked={editingExam?.is_published} />
+                 <label htmlFor="is_published_legacy" className="text-xs font-bold">نمایش در لیست</label>
                </div>
             </div>
+
             
             <DialogFooter><Button type="submit" className="w-full font-bold">ذخیره نهایی آزمون</Button></DialogFooter>
           </form>

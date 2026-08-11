@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Trophy, Flame, ClipboardList, Zap, Bell, AlertCircle, Sparkles } from "lucide-react";
+import { BookOpen, Trophy, Flame, ClipboardList, Zap, Bell, AlertCircle, Sparkles, LayoutDashboard, Target } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteHeader } from "@/components/layout/site-header";

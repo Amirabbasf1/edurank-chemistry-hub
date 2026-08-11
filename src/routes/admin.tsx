@@ -724,8 +724,15 @@ function AdminExams() {
               title: fd.get('title'),
               slug: fd.get('slug'),
               duration_minutes: Number(fd.get('duration')),
+              passing_score: Number(fd.get('passing_score')),
+              exam_type: fd.get('type'),
+              negative_marking: fd.get('negative_marking') === 'on',
+              randomize_questions: fd.get('randomize_questions') === 'on',
+              randomize_options: fd.get('randomize_options') === 'on',
+              status: fd.get('status'),
               is_published: fd.get('published') === 'on'
             });
+
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className="text-xs font-bold">عنوان آزمون</label><Input name="title" defaultValue={editingExam?.title} required /></div>

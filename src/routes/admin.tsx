@@ -1138,8 +1138,11 @@ function AdminLessons() {
               chapter_id: chapterId || null,
               topic_id: topicId || null,
               subtopic_id: subtopicId || null,
+              estimated_time: Number(fd.get('estimated_time')),
+              status: fd.get('status'),
               is_free_preview: fd.get('is_free') === 'on'
             });
+
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className="text-xs font-bold">عنوان</label><Input name="title" defaultValue={editingLesson?.title} required /></div>

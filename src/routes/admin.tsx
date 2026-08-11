@@ -14,7 +14,7 @@ import {
   adminGetMedia, adminDeleteMedia, adminAddMediaRecord,
   adminGetUsers, adminUpdateUserRole,
   adminGetQuestions, adminUpsertQuestion, adminDeleteQuestion, adminBulkUpdateQuestionStatus,
-  adminGetExams, adminUpsertExam,
+  adminGetExams, adminUpsertExam, adminDeleteExam,
   adminGetArticles, adminUpsertArticle,
   adminGetAuditLogs,
   adminGetHomepageSections, adminUpdateHomepageSection,
@@ -23,6 +23,7 @@ import {
   adminGetSiteSettings, adminUpdateSiteSetting,
   adminGetNavigationMenus, adminUpdateNavigationMenu,
   adminGetSystemStats
+
 
 } from "@/lib/admin.functions";
 

@@ -305,6 +305,7 @@ function AdminCourses() {
               <TableHead className="text-right">قیمت</TableHead>
               <TableHead className="text-right">وضعیت</TableHead>
               <TableHead className="text-right">دانشجو</TableHead>
+              <TableHead className="text-right">مدرسین</TableHead>
               <TableHead className="text-right">عملیات</TableHead>
             </TableRow>
           </TableHeader>
@@ -322,6 +323,9 @@ function AdminCourses() {
                 </TableCell>
                 <TableCell>{faNumber(course.students_count)}</TableCell>
                 <TableCell>
+                  <InstructorManager courseId={course.id} />
+                </TableCell>
+                <TableCell>
                   <Button variant="ghost" size="sm" onClick={() => {
                     setEditingCourse(course);
                     setIsDialogOpen(true);
@@ -333,6 +337,73 @@ function AdminCourses() {
         </Table>
       </div>
     </div>
+  );
+}
+
+function InstructorManager({ courseId }: { courseId: string }) {
+  const { data: instructors, refetch } = useQuery({ 
+    queryKey: ['course-instructors', courseId], 
+    queryFn: () => adminGetCourseInstructors({ data: { courseId } }) 
+  });
+  const { data: allUsers } = useQuery({ queryKey: ['admin-users'], queryFn: adminGetUsers });
+  
+  const assignMutation = useMutation({
+    mutationFn: (instructorId: string) => adminAssignInstructorToCourse({ data: { courseId, instructorId } }),
+    onSuccess: () => {
+      refetch();
+      toast.success('مدرس با موفقیت اضافه شد');
+    }
+  });
+
+  const availableInstructors = useMemo(() => {
+    return allUsers?.filter(u => 
+      (u as any).user_roles?.some((r: any) => r.role === 'instructor') &&
+      !instructors?.some((i: any) => i.instructor_id === u.id)
+    );
+  }, [allUsers, instructors]);
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2 font-bold">
+          <Users className="size-3" /> {faNumber(instructors?.length || 0)} مدرس
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[400px]" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-right">مدیریت مدرسین دوره</DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold">افزودن مدرس جدید</label>
+            <div className="flex gap-2">
+              <Select onValueChange={(val) => assignMutation.mutate(val)}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="انتخاب مدرس..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableInstructors?.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2 pt-4">
+            <label className="text-xs font-bold">مدرسین فعلی</label>
+            <div className="space-y-1">
+              {instructors?.map((i: any) => (
+                <div key={i.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-sm">
+                  <span className="font-bold">{i.profiles?.full_name}</span>
+                  <Badge variant="outline">فعال</Badge>
+                </div>
+              ))}
+              {instructors?.length === 0 && <p className="text-xs text-muted-foreground py-2">هنوز مدرسی اختصاص نیافته است.</p>}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

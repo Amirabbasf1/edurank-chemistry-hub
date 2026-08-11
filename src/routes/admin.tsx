@@ -731,6 +731,44 @@ function AdminExams() {
               <div className="space-y-2"><label className="text-xs font-bold">عنوان آزمون</label><Input name="title" defaultValue={editingExam?.title} required /></div>
               <div className="space-y-2"><label className="text-xs font-bold">نامک</label><Input name="slug" defaultValue={editingExam?.slug} required /></div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">زمان (دقیقه)</label>
+                <Input name="duration" type="number" defaultValue={editingExam?.duration_minutes || 60} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">حداقل نمره قبولی (%)</label>
+                <Input name="passing_score" type="number" defaultValue={editingExam?.passing_score || 50} />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-bold">نوع آزمون</label>
+                 <Select name="type" defaultValue={editingExam?.exam_type || 'regular'}>
+                   <SelectTrigger><SelectValue /></SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="regular">معمولی</SelectItem>
+                     <SelectItem value="konkur">شبیه‌ساز کنکور</SelectItem>
+                     <SelectItem value="diagnostic">تعیین سطح</SelectItem>
+                   </SelectContent>
+                 </Select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 p-4 border rounded-xl bg-muted/5">
+              <div className="flex items-center gap-2">
+                <Checkbox id="neg_marking" name="negative_marking" defaultChecked={editingExam?.negative_marking} />
+                <label htmlFor="neg_marking" className="text-xs font-bold">نمره منفی</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="rand_q" name="randomize_questions" defaultChecked={editingExam?.randomize_questions} />
+                <label htmlFor="rand_q" className="text-xs font-bold">تصادفی‌سازی سوالات</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="rand_o" name="randomize_options" defaultChecked={editingExam?.randomize_options} />
+                <label htmlFor="rand_o" className="text-xs font-bold">تصادفی‌سازی گزینه‌ها</label>
+              </div>
+            </div>
+
             
             <div className="space-y-4 border p-4 rounded-xl bg-muted/5">
               <h3 className="font-black text-sm flex items-center gap-2"><ClipboardList className="size-4" /> انتخاب سؤالات</h3>

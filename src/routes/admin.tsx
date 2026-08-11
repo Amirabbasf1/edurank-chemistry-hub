@@ -1418,20 +1418,52 @@ function AdminSEO() {
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <h2 className="text-xl font-black">مدیریت سئو سراسری</h2>
-      <div className="grid gap-6 max-w-2xl">
-        <div className="space-y-2">
-          <label className="text-xs font-bold">عنوان سایت</label>
-          <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><Search className="size-4" /> تنظیمات سئو سراسری</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">عنوان سایت (Suffix)</label>
+              <Input defaultValue={getVal('site_title') as string} onBlur={e => mutation.mutate({ key: 'site_title', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">توضیحات متا سایت</label>
+              <Textarea className="min-h-[100px]" defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">کلمات کلیدی سراسری</label>
+              <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><Monitor className="size-4" /> تنظیمات شبکه‌های اجتماعی (OG)</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">تصویر OpenGraph سراسری (URL)</label>
+              <Input defaultValue={getVal('og_image') as string} onBlur={e => mutation.mutate({ key: 'og_image', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">نام برند در شبکه‌های اجتماعی</label>
+              <Input defaultValue={getVal('og_site_name') as string} onBlur={e => mutation.mutate({ key: 'og_site_name', value: e.target.value })} />
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold">توضیحات سایت (Meta Description)</label>
-          <Textarea defaultValue={getVal('site_description') as string} onBlur={e => mutation.mutate({ key: 'site_description', value: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold">کلمات کلیدی (جدا شده با کاما)</label>
-          <Input defaultValue={getVal('site_keywords') as string} onBlur={e => mutation.mutate({ key: 'site_keywords', value: e.target.value })} />
+
+        <div className="space-y-6">
+          <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+            <h3 className="font-bold flex items-center gap-2"><ShieldAlert className="size-4" /> تنظیمات روبات‌ها و ایندکس</h3>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">فایل Robots.txt</label>
+              <Textarea className="min-h-[100px] font-mono text-[10px]" defaultValue={getVal('robots_txt') as string || 'User-agent: *\nAllow: /'} onBlur={e => mutation.mutate({ key: 'robots_txt', value: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground">کد Google Analytics (G-XXXXX)</label>
+              <Input defaultValue={getVal('google_analytics_id') as string} onBlur={e => mutation.mutate({ key: 'google_analytics_id', value: e.target.value })} />
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
   );
 }

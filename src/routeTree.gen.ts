@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as InstructorRouteImport } from './routes/instructor'
 import { Route as MistakesRouteImport } from './routes/mistakes'
 import { Route as PeriodicTableRouteImport } from './routes/periodic-table'
 import { Route as ToolsRouteImport } from './routes/tools'
@@ -66,6 +67,11 @@ const ContactRoute = ContactRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstructorRoute = InstructorRouteImport.update({
+  id: '/instructor',
+  path: '/instructor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MistakesRoute = MistakesRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof ConnectRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/instructor': typeof InstructorRoute
   '/mistakes': typeof MistakesRoute
   '/periodic-table': typeof PeriodicTableRoute
   '/tools': typeof ToolsRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/connect': typeof ConnectRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/instructor': typeof InstructorRoute
   '/mistakes': typeof MistakesRoute
   '/periodic-table': typeof PeriodicTableRoute
   '/tools': typeof ToolsRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/connect': typeof ConnectRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/instructor': typeof InstructorRoute
   '/mistakes': typeof MistakesRoute
   '/periodic-table': typeof PeriodicTableRoute
   '/tools': typeof ToolsRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/contact'
     | '/dashboard'
+    | '/instructor'
     | '/mistakes'
     | '/periodic-table'
     | '/tools'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/contact'
     | '/dashboard'
+    | '/instructor'
     | '/mistakes'
     | '/periodic-table'
     | '/tools'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/contact'
     | '/dashboard'
+    | '/instructor'
     | '/mistakes'
     | '/periodic-table'
     | '/tools'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   ConnectRoute: typeof ConnectRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  InstructorRoute: typeof InstructorRoute
   MistakesRoute: typeof MistakesRoute
   PeriodicTableRoute: typeof PeriodicTableRoute
   ToolsRoute: typeof ToolsRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instructor': {
+      id: '/instructor'
+      path: '/instructor'
+      fullPath: '/instructor'
+      preLoaderRoute: typeof InstructorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mistakes': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectRoute: ConnectRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  InstructorRoute: InstructorRoute,
   MistakesRoute: MistakesRoute,
   PeriodicTableRoute: PeriodicTableRoute,
   ToolsRoute: ToolsRoute,

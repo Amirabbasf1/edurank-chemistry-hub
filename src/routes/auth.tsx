@@ -40,7 +40,15 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+    if (!loading && user) {
+      if (roles.includes("instructor")) {
+        navigate({ to: "/instructor", replace: true });
+      } else if (roles.some(r => ["admin", "super_admin", "content_manager", "exam_manager"].includes(r))) {
+        navigate({ to: "/admin", replace: true });
+      } else {
+        navigate({ to: "/dashboard", replace: true });
+      }
+    }
   }, [user, loading, navigate]);
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
@@ -59,7 +67,13 @@ function AuthPage() {
       return;
     }
     toast.success("خوش آمدید!");
-    navigate({ to: "/dashboard" });
+    if (roles.includes("instructor")) {
+      navigate({ to: "/instructor" });
+    } else if (roles.some(r => ["admin", "super_admin", "content_manager", "exam_manager"].includes(r))) {
+      navigate({ to: "/admin" });
+    } else {
+      navigate({ to: "/dashboard" });
+    }
   }
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
@@ -93,7 +107,13 @@ function AuthPage() {
       toast.success("ایمیل تأیید برای شما ارسال شد.");
       return;
     }
-    navigate({ to: "/dashboard" });
+    if (roles.includes("instructor")) {
+      navigate({ to: "/instructor" });
+    } else if (roles.some(r => ["admin", "super_admin", "content_manager", "exam_manager"].includes(r))) {
+      navigate({ to: "/admin" });
+    } else {
+      navigate({ to: "/dashboard" });
+    }
   }
 
   async function handleGoogle() {
@@ -105,7 +125,13 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    if (roles.includes("instructor")) {
+      navigate({ to: "/instructor" });
+    } else if (roles.some(r => ["admin", "super_admin", "content_manager", "exam_manager"].includes(r))) {
+      navigate({ to: "/admin" });
+    } else {
+      navigate({ to: "/dashboard" });
+    }
   }
 
   return (

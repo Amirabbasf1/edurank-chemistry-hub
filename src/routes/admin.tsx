@@ -23,8 +23,10 @@ import {
   adminGetPages, adminUpsertPage, adminDeletePage,
   adminGetSiteSettings, adminUpdateSiteSetting,
   adminGetNavigationMenus, adminUpdateNavigationMenu,
-  adminGetSystemStats
+  adminGetSystemStats, adminAssignInstructorToCourse, adminGetCourseInstructors
 } from "@/lib/admin.functions";
+
+import { instructorGetCourses } from "@/lib/instructor.functions";
 
 import { adminDuplicateLesson } from "@/lib/admin-curriculum.functions";
 
@@ -613,12 +615,47 @@ function AdminUsers() {
                 <TableCell className="font-bold">{u.full_name}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {(u as any).user_roles?.map((r: any) => <Badge key={r.role} variant="secondary">{r.role}</Badge>)}
+                    {(u as any).user_roles?.map((r: any) => (
+                      <Badge key={r.role} variant="secondary">{r.role}</Badge>
+                    ))}
                   </div>
                 </TableCell>
                 <TableCell>{faNumber(u.xp)}</TableCell>
                 <TableCell>{faDate(u.last_active_date)}</TableCell>
-                <TableCell><Button variant="ghost" size="sm">مدیریت</Button></TableCell>
+                <TableCell>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm">مدیریت</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[400px]" dir="rtl">
+                      <DialogHeader>
+                        <DialogTitle className="text-right">تغییر نقش کاربر: {u.full_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold">انتخاب نقش</label>
+                          <Select 
+                            defaultValue={(u as any).user_roles?.[0]?.role || 'student'} 
+                            onValueChange={(val) => {
+                              adminUpdateUserRole({ data: { userId: u.id, roles: [val] } }).then(() => {
+                                toast.success('نقش کاربر تغییر یافت');
+                              });
+                            }}
+                          >
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="student">دانش‌آموز</SelectItem>
+                              <SelectItem value="instructor">مدرس</SelectItem>
+                              <SelectItem value="admin">مدیر</SelectItem>
+                              <SelectItem value="super_admin">مدیر ارشد</SelectItem>
+                              <SelectItem value="content_manager">مدیر محتوا</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

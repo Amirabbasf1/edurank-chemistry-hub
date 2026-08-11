@@ -6,7 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { instructorGetStats, instructorGetCourses, instructorGetLessons, instructorGetQuestions, instructorGetExams, instructorGetStudents } from "@/lib/instructor.functions";
-import { faNumber } from "@/lib/fa";
+import { faNumber, faPrice, faDate } from "@/lib/fa";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/instructor")({
   component: InstructorLayout,
@@ -112,7 +114,7 @@ function InstructorCourses() {
         {courses?.map(course => (
           <Card key={course.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition">
             <div className="aspect-video bg-slate-200 relative">
-              {course.image_url && <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />}
+              {(course as any).image_url && <img src={(course as any).image_url} alt={course.title} className="w-full h-full object-cover" />}
               <div className="absolute top-2 right-2">
                 <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}</Badge>
               </div>
@@ -182,8 +184,8 @@ function InstructorLessons() {
               {lessons?.map(l => (
                 <tr key={l.id} className="border-b last:border-0 hover:bg-slate-50/50 transition">
                   <td className="px-6 py-4 font-bold">{l.title}</td>
-                  <td className="px-6 py-4">{faNumber(l.duration_minutes || 0)} دقیقه</td>
-                  <td className="px-6 py-4"><Badge variant={l.is_published ? 'default' : 'secondary'}>{l.is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></td>
+                  <td className="px-6 py-4">{faNumber((l as any).duration_minutes || 0)} دقیقه</td>
+                  <td className="px-6 py-4"><Badge variant={(l as any).is_published ? 'default' : 'secondary'}>{(l as any).is_published ? 'منتشر شده' : 'پیش‌نویس'}</Badge></td>
                   <td className="px-6 py-4"><Button variant="ghost" size="sm">ویرایش</Button></td>
                 </tr>
               ))}

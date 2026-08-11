@@ -909,10 +909,29 @@ function AdminArticles() {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <input type="checkbox" name="published" defaultChecked={editingArticle?.is_published} />
-                <label className="text-xs font-bold">انتشار فوری</label>
-              </div>
+              <Tabs defaultValue="content" className="w-full">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="content">محتوا</TabsTrigger>
+                  <TabsTrigger value="seo">تنظیمات سئو</TabsTrigger>
+                </TabsList>
+                <TabsContent value="content" className="space-y-4 pt-4">
+                   <div className="flex items-center gap-2">
+                    <Checkbox id="pub_article" name="published" defaultChecked={editingArticle?.is_published} />
+                    <label htmlFor="pub_article" className="text-xs font-bold">انتشار فوری</label>
+                  </div>
+                </TabsContent>
+                <TabsContent value="seo" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold">عنوان سئو (SEO Title)</label>
+                    <Input name="seo_title" defaultValue={editingArticle?.seo_title} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold">توضیحات متا (Meta Description)</label>
+                    <Textarea name="meta_description" defaultValue={editingArticle?.meta_description} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
               <DialogFooter>
                 <Button type="submit" className="w-full font-bold">ذخیره و انتشار</Button>
               </DialogFooter>
